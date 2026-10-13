@@ -1,0 +1,1213 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Bitácora Sensorial</title>
+<meta name="theme-color" content="#2F4FB5">
+<meta name="description" content="Registro diario para familias de niños con dificultades de procesamiento sensorial o autismo">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Bitácora">
+<style>body{margin:0}</style>
+<script src="xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: app de una columna para móvil; pestañas fijas arriba; tarjetas solo donde separan objetos reales */
+:root{
+  --bg:#F3F6FA; --surface:#FFFFFF; --ink:#17202E; --muted:#5A6577; --line:#DCE2EA; --soft:#E9EEF5;
+  --accent:#2F4FB5; --accent-ink:#FFFFFF; --ok:#2E8A57; --warn:#B7791F; --bad:#C2453F;
+  --aud:#3E7BD6; --tac:#D2555A; --vis:#C99212; --ves:#2A9585; --pro:#7B5CC9; --olf:#C46A2B; --int:#4F8A33;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F141C; --surface:#18202B; --ink:#E6EBF2; --muted:#9AA6B8; --line:#2B3545; --soft:#212B39;
+  --accent:#93AAF5; --accent-ink:#0F141C; --ok:#5CC48A; --warn:#E3AE4F; --bad:#EE7C76;
+  --aud:#6FA2EC; --tac:#EB7F83; --vis:#E5BE4D; --ves:#4FC2B1; --pro:#A68BEA; --olf:#E59360; --int:#80BC60;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F141C; --surface:#18202B; --ink:#E6EBF2; --muted:#9AA6B8; --line:#2B3545; --soft:#212B39;
+  --accent:#93AAF5; --accent-ink:#0F141C; --ok:#5CC48A; --warn:#E3AE4F; --bad:#EE7C76;
+  --aud:#6FA2EC; --tac:#EB7F83; --vis:#E5BE4D; --ves:#4FC2B1; --pro:#A68BEA; --olf:#E59360; --int:#80BC60;
+  color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;padding-inline:16px;padding-block:0 48px}
+.wrap{max-width:920px;margin:0 auto}
+header.top{padding-block:24px 8px;display:flex;flex-wrap:wrap;gap:12px 16px;align-items:flex-end;justify-content:space-between}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(1.7rem,4vw,2.3rem);line-height:1.05;margin:0;letter-spacing:-.01em}
+h1 span{color:var(--accent)}
+.sub{color:var(--muted);margin:4px 0 0;max-width:60ch}
+.kid{display:grid;gap:6px;font-size:.9rem;color:var(--muted)}
+.kid label{display:grid;grid-template-columns:3.5rem minmax(0,15rem);gap:8px;align-items:center}
+.kid input,.kid select{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 10px;width:100%}
+nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;gap:4px;overflow-x:auto;padding-block:10px;border-bottom:1px solid var(--line);margin-bottom:20px}
+nav.tabs button{flex:0 0 auto;font:700 .95rem var(--body);color:var(--muted);background:none;border:0;border-radius:999px;padding:8px 14px;cursor:pointer}
+nav.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,.chip:focus-within{outline:3px solid var(--accent);outline-offset:2px}
+.banner{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:var(--soft);border-radius:10px;padding:10px 14px;font-size:.92rem;margin-bottom:20px}
+h2{font-family:var(--display);font-weight:700;font-size:1.35rem;margin:0 0 4px;text-wrap:balance}
+h3{font-family:var(--display);font-weight:500;font-size:1.05rem;margin:0 0 10px}
+.lead{color:var(--muted);margin:0 0 16px;max-width:65ch}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
+.stack{display:grid;gap:18px}
+.grid2{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr))}
+.grid2>*{min-width:0}
+.field{display:grid;gap:8px}
+.label{font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{position:relative}
+.chip input{position:absolute;opacity:0;inset:0;cursor:pointer;margin:0}
+.chip span{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:.92rem;background:var(--surface)}
+.chip input:checked+span{border-color:var(--c,var(--accent));background:color-mix(in srgb,var(--c,var(--accent)) 16%,var(--surface));font-weight:700}
+.chip small{font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--c,var(--accent));flex:0 0 auto}
+.kinds{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kinds .chip span{width:100%;justify-content:center;border-radius:12px;padding:12px 8px;font-weight:700;text-align:center;flex-direction:column;gap:2px}
+.kinds .chip span em{font-style:normal;font-weight:400;font-size:.8rem;color:var(--muted)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+select,textarea,input[type=text],input[type=number],input[type=datetime-local]{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+textarea{min-height:70px;resize:vertical}
+.row{display:flex;flex-wrap:wrap;gap:12px}
+.row>*{flex:1 1 180px;min-width:0}
+.btn{font:700 .95rem var(--body);border-radius:10px;padding:10px 16px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.small{padding:6px 10px;font-size:.85rem}
+.scale{display:flex;justify-content:space-between;gap:12px;font-size:.8rem;color:var(--muted)}
+.hint{font-size:.85rem;color:var(--muted);margin:0}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:700;z-index:20}
+.list{display:grid;gap:0}
+.entry{display:grid;grid-template-columns:4px 1fr auto;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.entry:first-child{border-top:0}
+.stripe{border-radius:4px;background:var(--c)}
+.entry .meta{font-size:.84rem;color:var(--muted)}
+.entry .what{font-weight:700}
+.kindtag{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--c)}
+.quote{margin:4px 0 0;padding-left:10px;border-left:2px solid var(--aud);font-style:italic}
+.alert{margin-top:6px;font-size:.85rem;color:var(--bad);font-weight:700}
+.pill{display:inline-block;font-size:.75rem;font-weight:700;border-radius:999px;padding:2px 8px;background:var(--soft);color:var(--muted);margin:2px 4px 0 0}
+.pill.ok{color:var(--ok)} .pill.warn{color:var(--warn)} .pill.bad{color:var(--bad)} .pill.star{color:var(--accent)}
+.daygroup{font-family:var(--display);font-weight:500;color:var(--muted);margin:18px 0 2px;font-size:.95rem}
+.daygroup:first-child{margin-top:0}
+.bars{display:grid;gap:10px}
+.bar{display:grid;grid-template-columns:10rem 1fr 2.5rem;gap:10px;align-items:center;font-size:.9rem}
+.bar>span:first-child{min-width:0}
+.track{height:14px;background:var(--soft);border-radius:4px;display:flex;overflow:hidden}
+.track i{display:block;height:100%}
+.num{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.82rem;color:var(--muted);margin-top:10px}
+.legend b{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px}
+.kpi{border-left:3px solid var(--line);padding:2px 0 2px 12px}
+.kpi .v{font-family:var(--display);font-size:1.8rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi .k{font-size:.84rem;color:var(--muted)}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.tablewrap{overflow-x:auto}
+.strat{border-top:1px solid var(--line);padding:14px 0}
+.strat:first-of-type{border-top:0}
+.strat h4{margin:0 0 4px;font-size:1rem}
+.strat p{margin:0;color:var(--muted);font-size:.93rem;max-width:65ch}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}
+.plan-slot{border-top:1px solid var(--line);padding:12px 0}
+.plan-slot:first-of-type{border-top:0}
+.plan-item{display:flex;gap:10px;align-items:flex-start;padding:6px 0}
+.plan-item input{width:20px;height:20px;accent-color:var(--ok);margin-top:2px;flex:0 0 auto}
+.plan-item.done label{text-decoration:line-through;color:var(--muted)}
+.plan-item label{flex:1;min-width:0}
+.x{background:none;border:0;color:var(--muted);cursor:pointer;font-size:1.1rem;padding:0 4px}
+.stressval{font-family:var(--display);font-size:2.4rem;font-weight:700;font-variant-numeric:tabular-nums}
+svg text{fill:var(--muted);font-family:var(--body);font-size:11px}
+.note{font-size:.85rem;color:var(--muted);max-width:70ch}
+pre.report{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px;font-size:.85rem;max-height:380px;overflow:auto;margin:0}
+.goal{display:grid;grid-template-columns:1fr 150px 8.5rem;gap:8px 16px;align-items:center;padding:14px 0;border-top:1px solid var(--line)}
+.goal:first-child{border-top:0}
+.goal>div{min-width:0}
+.goal .gname{font-weight:700}
+.goal .gmeta{font-size:.82rem;color:var(--muted)}
+.goal .gnow{font-size:.85rem}
+.goal .gnow b{display:block}
+.trend{font-weight:700;font-size:.82rem}
+.trend.up{color:var(--ok)} .trend.down{color:var(--bad)} .trend.flat{color:var(--muted)}
+.ladder{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.8rem;color:var(--muted);margin-top:4px}
+.ladder span b{font-variant-numeric:tabular-nums;color:var(--ink)}
+.hito{display:grid;grid-template-columns:auto 1fr;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.hito:first-child{border-top:0}
+.hito .ic{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--ok) 18%,var(--surface));color:var(--ok);font-weight:700}
+.hito .ic.q{background:color-mix(in srgb,var(--aud) 18%,var(--surface));color:var(--aud)}
+details summary{cursor:pointer;color:var(--muted);font-size:.9rem}
+.sugg{display:flex;flex-wrap:wrap;gap:8px}
+.sugg button{font:inherit;font-size:.88rem;text-align:left;color:var(--ink);background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:6px 10px;cursor:pointer}
+.sugg button:hover{border-color:var(--accent)}
+.sugg button b{color:var(--accent);margin-right:4px}
+.dict td:first-child{font-weight:700}
+.dict .tipo{font-size:.75rem;color:var(--muted);font-weight:400;display:block}
+.stratnote{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;font-size:.9rem;background:var(--soft);border-radius:10px;padding:10px 14px}
+.adapt{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ok);margin-left:6px}
+.up{color:var(--ok);font-weight:700}
+.alertbar{background:color-mix(in srgb,var(--bad) 14%,var(--surface));border:1px solid var(--bad);color:var(--ink)}
+.alertbar.soft{background:color-mix(in srgb,var(--warn) 14%,var(--surface));border-color:var(--warn)}
+.exp-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}
+.exp-opt{display:grid;gap:6px;align-content:start;border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--bg)}
+.exp-opt span{font-size:.88rem;color:var(--muted)}
+.exp-opt .btn{justify-self:start;margin-top:4px}
+input[type=file]{font:inherit;font-size:.9rem;color:var(--ink)}
+footer{margin-top:36px;font-size:.82rem;color:var(--muted);max-width:75ch}
+@media (max-width:560px){
+  .bar{grid-template-columns:7rem 1fr 2rem}
+  .goal{grid-template-columns:auto 1fr}
+  .goal>div:first-child{grid-column:1 / -1}
+  .kinds .chip span em{display:none}
+  .dict thead{display:none}
+  .dict tbody{display:block}
+  .dict tr{display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .dict td{padding:0;border:0}
+  .dict td:nth-child(2){grid-column:1;grid-row:2}
+  .dict td:nth-child(3){grid-column:1;grid-row:3;font-size:.82rem;color:var(--muted)}
+  .dict td:nth-child(4){grid-column:2;grid-row:1}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+
+</head>
+<body>
+<div class="banner" id="installBanner" hidden style="margin:12px auto 0;max-width:920px">
+  <span id="installText">Instala la Bitácora en este celular para usarla sin internet y que los registros queden guardados.</span>
+  <button class="btn small primary" id="installBtn" hidden>Instalar</button>
+</div>
+<script>
+/* Instalación y funcionamiento sin conexión (solo en la versión alojada) */
+(function(){
+  if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost')){
+    window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+  }
+  const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+  const banner=document.getElementById('installBanner'),btn=document.getElementById('installBtn'),txt=document.getElementById('installText');
+  if(standalone)return;
+  let ev=null;
+  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();ev=e;banner.hidden=false;btn.hidden=false});
+  btn.onclick=async()=>{if(!ev)return;ev.prompt();const r=await ev.userChoice;if(r.outcome==='accepted')banner.hidden=true;ev=null};
+  if(/iphone|ipad|ipod/i.test(navigator.userAgent)){txt.textContent='Para instalarla en el iPhone: toca Compartir y luego «Agregar a inicio». Así funciona sin internet y guarda los registros.';banner.hidden=false}
+  window.addEventListener('appinstalled',()=>{banner.hidden=true});
+})();
+</script>
+<div class="wrap">
+<header class="top">
+  <div>
+    <h1>Bitácora <span>Sensorial</span></h1>
+    <p class="sub">Registro diario para familias de niños y adolescentes con dificultades de procesamiento sensorial o autismo. Prototipo de investigación.</p>
+  </div>
+  <div class="kid">
+    <label for="kidName">Niño/a <input id="kidName" type="text" placeholder="Nombre o alias"></label>
+    <label for="kidEdad">Edad <input id="kidEdad" type="text" placeholder="Ej.: 4 años y 10 meses"></label>
+    <label for="kidPerfil">Perfil <select id="kidPerfil">
+      <option value="tea1">TEA nivel 1 con dificultades sensoriales</option>
+      <option value="tea2">TEA nivel 2 con dificultades sensoriales</option>
+      <option value="tps">Trastorno del procesamiento sensorial</option>
+      <option value="eval">En proceso de evaluación</option>
+    </select></label>
+    <label for="kidNivel">Habla <select id="kidNivel">
+      <option value="emerg">Habla poco o se le entiende poco</option>
+      <option value="frases">Usa frases cortas</option>
+      <option value="fluido">Conversa con fluidez</option>
+    </select></label>
+    <label for="kidCuidador">Registra <input id="kidCuidador" type="text" list="cuidList" placeholder="Ej.: Mamá, Papá, Abuela" autocomplete="off"></label>
+    <datalist id="cuidList"></datalist>
+  </div>
+</header>
+<div class="banner alertbar" id="storageBanner" hidden></div>
+
+<nav class="tabs" role="tablist" aria-label="Secciones">
+  <button role="tab" data-tab="registro" aria-selected="true">Registrar</button>
+  <button role="tab" data-tab="diario" aria-selected="false">Diario</button>
+  <button role="tab" data-tab="avances" aria-selected="false">Avances</button>
+  <button role="tab" data-tab="patrones" aria-selected="false">Patrones</button>
+  <button role="tab" data-tab="estrategias" aria-selected="false">Estrategias</button>
+  <button role="tab" data-tab="plan" aria-selected="false">Plan del día</button>
+  <button role="tab" data-tab="familia" aria-selected="false">Mi bienestar</button>
+</nav>
+
+<div class="banner" id="exampleBanner">
+  <span>Estás viendo <b>datos de ejemplo</b> de 14 días. Los registros se guardan solo en este navegador.</span>
+  <button class="btn small" id="clearExamples">Borrar ejemplos y empezar</button>
+</div>
+
+<!-- REGISTRAR -->
+<section id="tab-registro" class="stack">
+  <div>
+    <h2>¿Qué quieres anotar?</h2>
+    <p class="lead">Registra lo difícil y también lo que salió bien. Cada registro toma menos de un minuto.</p>
+  </div>
+  <div class="kinds" id="kindPick" role="radiogroup" aria-label="Tipo de registro">
+    <label class="chip" style="--c:var(--aud)"><input type="radio" name="kind" value="sens" checked><span>Episodio sensorial<em>ruido, texturas, movimiento</em></span></label>
+    <label class="chip" style="--c:var(--warn)"><input type="radio" name="kind" value="cond"><span>Conducta<em>crisis, rigidez, negativa</em></span></label>
+    <label class="chip" style="--c:var(--ok)"><input type="radio" name="kind" value="logro"><span>Avance<em>lenguaje, social, autonomía</em></span></label>
+  </div>
+
+  <!-- sensorial -->
+  <form id="entryForm" class="panel stack" autocomplete="off">
+    <div class="row">
+      <div class="field"><label class="label" for="fTime">Cuándo</label><input id="fTime" type="datetime-local" required></div>
+      <div class="field"><label class="label" for="fDur">Duración (min)</label><input id="fDur" type="number" min="1" max="240" value="10"></div>
+    </div>
+    <div class="field"><span class="label">Dónde</span><div class="chips" id="fContexto"></div></div>
+    <div class="field"><span class="label">Sistema sensorial</span><div class="chips" id="fSistema"></div></div>
+    <div class="field"><span class="label">Tipo de respuesta</span><div class="chips" id="fRespuesta"></div></div>
+    <div class="field">
+      <label class="label" for="fInt">Intensidad: <span id="fIntVal">3</span> de 5</label>
+      <input id="fInt" type="range" min="1" max="5" value="3">
+      <div class="scale"><span>Leve, se calmó solo</span><span>Muy intensa, no pudo seguir</span></div>
+    </div>
+    <div class="row">
+      <div class="field"><label class="label" for="fEst">Qué hicimos</label><select id="fEst"></select></div>
+      <div class="field"><span class="label">¿Ayudó?</span><div class="chips" id="fEfe"></div></div>
+    </div>
+    <div class="field"><label class="label" for="fNota">Detalle (opcional)</label><textarea id="fNota" placeholder="Ej.: secador de manos en el baño del centro comercial; se tapó los oídos y lloró."></textarea></div>
+    <div><button class="btn primary" type="submit">Guardar episodio</button></div>
+  </form>
+
+  <!-- conducta ABC -->
+  <form id="condForm" class="panel stack" autocomplete="off" hidden>
+    <p class="hint">Se registra en tres partes: qué pasó antes, qué hizo y qué pasó después. Así se ve qué desencadena la conducta y qué ayuda a que termine.</p>
+    <div class="row">
+      <div class="field"><label class="label" for="cTime">Cuándo</label><input id="cTime" type="datetime-local" required></div>
+      <div class="field"><label class="label" for="cDur">Duración (min)</label><input id="cDur" type="number" min="1" max="240" value="10"></div>
+    </div>
+    <div class="field"><span class="label">Dónde</span><div class="chips" id="cContexto"></div></div>
+    <div class="field"><span class="label">A · Qué pasó antes</span><div class="chips" id="cAnte"></div></div>
+    <div class="field"><span class="label">B · Qué hizo</span><div class="chips" id="cCond"></div></div>
+    <div class="field">
+      <label class="label" for="cInt">Intensidad: <span id="cIntVal">3</span> de 5</label>
+      <input id="cInt" type="range" min="1" max="5" value="3">
+      <div class="scale"><span>Leve, breve</span><span>Muy intensa, riesgo para él u otros</span></div>
+    </div>
+    <div class="field"><span class="label">C · Qué hicimos después</span><div class="chips" id="cCons"></div></div>
+    <div class="field"><span class="label">Cómo terminó</span><div class="chips" id="cDes"></div></div>
+    <div class="field"><label class="label" for="cNota">Detalle (opcional)</label><textarea id="cNota" placeholder="Ej.: la profesora cambió la clase de educación física por un video; gritó y se fue del salón."></textarea></div>
+    <div><button class="btn primary" type="submit">Guardar conducta</button></div>
+  </form>
+
+  <!-- logro -->
+  <form id="logroForm" class="panel stack" autocomplete="off" hidden>
+    <div class="row">
+      <div class="field"><label class="label" for="lTime">Cuándo</label><input id="lTime" type="datetime-local" required></div>
+      <div class="field"><label class="label" for="lLugar">Dónde</label><select id="lLugar"></select></div>
+    </div>
+    <div class="field"><label class="label" for="lObj">Objetivo</label><select id="lObj"></select><p class="hint">Los objetivos se definen con el equipo de terapia en la pestaña Avances.</p></div>
+    <div class="field"><span class="label">Cuánta ayuda necesitó</span><div class="chips" id="lApoyo"></div></div>
+    <div class="field"><span class="label">Cómo se comunicó (marca todas las que usó)</span><div class="chips" id="lForma"></div><p class="hint">Van de menos a más verbal. Todas cuentan: señalar o llevarte de la mano también es comunicarse.</p></div>
+    <div class="field"><label class="label" for="lFrase">Lo que dijo o cómo sonó (opcional)</label><input id="lFrase" type="text"><p class="hint" id="lFraseHint"></p></div>
+    <div class="field"><label class="label" for="lNota">Detalle (opcional)</label><textarea id="lNota" placeholder="Ej.: en el parque se acercó a un niño que no conocía."></textarea></div>
+    <div><button class="btn primary" type="submit">Guardar avance</button></div>
+  </form>
+</section>
+
+<!-- DIARIO -->
+<section id="tab-diario" class="stack" hidden>
+  <div><h2>Diario</h2><p class="lead">Todos los registros, del más reciente al más antiguo.</p></div>
+  <div class="filters" id="diaryFilters"></div>
+  <div class="panel"><div id="diaryList"></div></div>
+</section>
+
+<!-- AVANCES -->
+<section id="tab-avances" class="stack" hidden>
+  <div><h2>Avances</h2><p class="lead">Cada objetivo muestra cuánta ayuda necesitó en los últimos 14 días. Avanzar significa necesitar menos ayuda, aunque no llegue a hacerlo solo todavía.</p></div>
+  <div class="panel">
+    <h3>Logros recientes</h3>
+    <div id="hitos"></div>
+  </div>
+  <div class="panel stack" id="dictPanel">
+    <div>
+      <h3 style="margin-bottom:4px">Sus palabras y señas</h3>
+      <p class="hint">Un diccionario de cómo se comunica: sus sonidos, señas y gestos con lo que significan. Compártelo con el colegio, los abuelos y los terapeutas para que todos le entiendan.</p>
+    </div>
+    <div class="tablewrap"><table class="dict" id="dictTable"></table></div>
+    <form id="dictForm" class="row" autocomplete="off">
+      <div class="field" style="flex:2 1 200px"><label class="label" for="dForma">Lo que dice o hace</label><input id="dForma" type="text" placeholder="Ej.: «aba» o «se toca la boca»" required></div>
+      <div class="field"><label class="label" for="dTipo">Tipo</label><select id="dTipo"></select></div>
+      <div class="field" style="flex:2 1 200px"><label class="label" for="dSig">Qué significa</label><input id="dSig" type="text" placeholder="Ej.: agua" required></div>
+      <div class="field" style="flex:0 0 auto;align-self:end"><button class="btn primary" type="submit">Agregar</button></div>
+    </form>
+  </div>
+  <div class="panel">
+    <h3>Cómo se comunica</h3>
+    <p class="hint" style="margin-bottom:10px">Veces que usó cada forma en los avances registrados, primera semana frente a segunda. Avanzar es que aparezcan formas más abajo en la lista.</p>
+    <div class="tablewrap"><table id="formaTable"></table></div>
+  </div>
+  <div class="panel">
+    <h3>Objetivos de terapia</h3>
+    <div class="ladder" id="ladder"></div>
+    <div id="goals" style="margin-top:6px"></div>
+    <details id="archived" style="margin-top:12px"><summary>Objetivos archivados</summary><div id="archivedList"></div></details>
+  </div>
+  <form id="goalForm" class="panel stack" autocomplete="off">
+    <h3 style="margin:0">Agregar objetivo</h3>
+    <div class="field" id="suggWrap"><span class="label">Sugeridos para su nivel de lenguaje</span><div class="sugg" id="sugg"></div></div>
+    <div class="field"><label class="label" for="gText">Objetivo, en palabras concretas</label><input id="gText" type="text" placeholder="Ej.: Saluda a la profesora al llegar sin que se lo pidan" required></div>
+    <div class="row">
+      <div class="field"><label class="label" for="gArea">Área</label><select id="gArea"></select></div>
+      <div class="field"><label class="label" for="gQuien">Lo propuso</label><select id="gQuien"></select></div>
+    </div>
+    <div><button class="btn primary" type="submit">Agregar objetivo</button></div>
+  </form>
+</section>
+
+<!-- PATRONES -->
+<section id="tab-patrones" class="stack" hidden>
+  <div><h2>Patrones de las últimas dos semanas</h2><p class="lead">Un resumen para llevar a la cita con terapia ocupacional, fonoaudiología o psicología. Muestra tendencias, no diagnósticos.</p></div>
+  <div class="kpis panel" id="kpis"></div>
+  <div class="panel"><h3>Episodios, conductas y estrés del cuidador</h3><div id="trend"></div><div class="legend"><span><b style="background:var(--aud)"></b>Episodios sensoriales</span><span><b style="background:var(--warn)"></b>Conductas</span><span><b style="background:var(--bad);height:3px;vertical-align:3px"></b>Estrés del cuidador (0 a 10)</span></div></div>
+  <div class="grid2">
+    <div class="panel"><h3>Sensorial: por sistema</h3><div class="bars" id="bySystem"></div><div class="legend" id="respLegend"></div></div>
+    <div class="panel"><h3>Sensorial: por lugar</h3><div class="bars" id="byContext"></div></div>
+  </div>
+  <div class="grid2">
+    <div class="panel"><h3>Conductas: qué pasó antes</h3><div class="bars" id="byAnte"></div></div>
+    <div class="panel"><h3>Conductas más frecuentes</h3><div class="bars" id="byCond"></div><p class="note" id="pairs"></p></div>
+  </div>
+  <div class="grid2">
+    <div class="panel"><h3>Qué hicimos ante las conductas</h3><div class="tablewrap"><table id="consTable"></table></div></div>
+    <div class="panel"><h3>Estrategias sensoriales</h3><div class="tablewrap"><table id="stratTable"></table></div></div>
+  </div>
+  <div class="panel"><h3>Momento del día</h3><div class="bars" id="byFranja"></div><div class="legend"><span><b style="background:var(--aud)"></b>Sensorial</span><span><b style="background:var(--warn)"></b>Conductas</span></div></div>
+  <div class="panel stack">
+    <h3>Resumen para el equipo de terapia</h3>
+    <pre class="report" id="report"></pre>
+    <div><button class="btn" id="copyReport">Copiar resumen</button></div>
+  </div>
+  <div class="panel stack" id="exportPanel">
+    <div>
+      <h3 style="margin-bottom:4px">Respaldo y exportación</h3>
+      <p class="hint">Guarda todos los registros en un archivo para llevar el seguimiento fuera de la app, compartirlo con el equipo o pasarlo a otro celular. Incluye todo el historial, no solo los últimos 14 días.</p>
+    </div>
+    <div class="exp-grid">
+      <div class="exp-opt"><b>Excel</b><span>Una hoja por tipo de registro, con fechas y textos legibles. Para el seguimiento en el computador.</span><button class="btn primary" id="expXlsx">Descargar Excel</button></div>
+      <div class="exp-opt"><b>CSV</b><span>Todos los registros en una sola tabla de texto, separada por punto y coma.</span><button class="btn" id="expCsv">Descargar CSV</button></div>
+      <div class="exp-opt"><b>Copia de seguridad</b><span>Archivo para volver a cargar en esta app, en este u otro dispositivo.</span><button class="btn" id="expJson">Descargar copia</button><button class="btn" id="expShare" hidden>Enviar copia</button></div>
+    </div>
+    <div class="field">
+      <label class="label" for="importFile">Cargar una copia de seguridad</label>
+      <input id="importFile" type="file" accept=".json,application/json" multiple>
+      <p class="hint">Puedes elegir varias copias a la vez (una por cuidador). Los registros se suman a los que ya tienes: los repetidos no se duplican y lo que alguien borró no vuelve a aparecer.</p>
+    </div>
+    <p class="hint" id="persistInfo"></p>
+    <p class="hint" id="expStatus" role="status"></p>
+    <textarea id="expFallback" readonly hidden style="min-height:160px;font-size:.8rem"></textarea>
+  </div>
+</section>
+
+<!-- ESTRATEGIAS -->
+<section id="tab-estrategias" class="stack" hidden>
+  <div><h2>Estrategias de acompañamiento</h2><p class="lead">Ideas generales para acompañar a tu hijo o hija. Ajústalas con tu equipo de terapia; cada niño es distinto.</p></div>
+  <div class="stratnote" id="stratNote"></div>
+  <div class="filters" id="stratFilters"></div>
+  <div class="panel" id="stratList"></div>
+</section>
+
+<!-- PLAN -->
+<section id="tab-plan" class="stack" hidden>
+  <div><h2>Plan del día</h2><p class="lead">Las actividades sensoriales y de rutina que acordaron con terapia para que el día sea más predecible. Marca lo que hicieron.</p></div>
+  <div class="panel" id="planList"></div>
+  <form id="planForm" class="panel row" autocomplete="off">
+    <div class="field"><label class="label" for="pFranja">Momento</label><select id="pFranja"></select></div>
+    <div class="field" style="flex:3 1 260px"><label class="label" for="pAct">Actividad</label><input id="pAct" type="text" placeholder="Ej.: 5 minutos de carretilla antes de la tarea" required></div>
+    <div class="field" style="flex:0 0 auto;align-self:end"><button class="btn primary" type="submit">Agregar</button></div>
+  </form>
+</section>
+
+<!-- FAMILIA -->
+<section id="tab-familia" class="stack" hidden>
+  <div><h2>¿Cómo estás tú hoy?</h2><p class="lead">Acompañar a un niño con autismo o desafíos sensoriales cansa. Registrar tu estrés ayuda a ver cuándo necesitas apoyo, y al equipo a entender a toda la familia.</p></div>
+  <form id="stressForm" class="panel stack" autocomplete="off">
+    <div class="field">
+      <label class="label" for="sVal">Nivel de estrés hoy</label>
+      <div class="stressval" id="sValOut">5</div>
+      <input id="sVal" type="range" min="0" max="10" value="5">
+      <div class="scale"><span>0 · tranquilo/a</span><span>10 · desbordado/a</span></div>
+    </div>
+    <div class="field"><span class="label">¿Cómo dormiste?</span><div class="chips" id="sSueno"></div></div>
+    <div class="field"><span class="label">¿Tuviste apoyo hoy?</span><div class="chips" id="sApoyo"></div></div>
+    <div><button class="btn primary" type="submit">Guardar check-in</button></div>
+  </form>
+  <div class="panel" id="stressAdvice"></div>
+</section>
+
+<footer>Versión 3.3. Bitácora Sensorial es un prototipo derivado del capítulo «Sensory processing disorder in childhood and adolescence: Research trends from 2014 to 2025» (Universidad Manuela Beltrán). Responde al vacío identificado en el clúster de contexto familiar y estudios longitudinales, y amplía el registro a niños con trastorno del espectro autista nivel 1 («requiere apoyo», DSM-5-TR). No diagnostica ni reemplaza la evaluación profesional. Si hay conductas que ponen en riesgo al niño o a otros, consulta pronto a tu equipo de salud.</footer>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+const SISTEMAS=[
+ {id:'aud',n:'Auditivo',c:'var(--aud)'},{id:'tac',n:'Táctil',c:'var(--tac)'},{id:'vis',n:'Visual',c:'var(--vis)'},
+ {id:'ves',n:'Vestibular',c:'var(--ves)'},{id:'pro',n:'Propioceptivo',c:'var(--pro)'},{id:'olf',n:'Olfato y gusto',c:'var(--olf)'},
+ {id:'int',n:'Interocepción',c:'var(--int)'}];
+const RESP=[
+ {id:'sobre',n:'Sobre-respuesta',d:'Reacciona de más: evita, se tapa, llora, huye',c:'var(--bad)'},
+ {id:'baja',n:'Baja respuesta',d:'Parece no notar: lento, desconectado, no siente dolor',c:'var(--accent)'},
+ {id:'busq',n:'Búsqueda',d:'Busca estímulo: se tira, choca, gira, toca todo',c:'var(--warn)'}];
+const CONTEXTOS=[{id:'casa',n:'Casa'},{id:'colegio',n:'Colegio'},{id:'comida',n:'Comida'},{id:'aseo',n:'Baño y aseo'},{id:'vestir',n:'Vestirse'},{id:'calle',n:'Calle y transporte'},{id:'social',n:'Reuniones'},{id:'sueno',n:'Hora de dormir'}];
+const LUGARES=[{id:'casa',n:'Casa'},{id:'colegio',n:'Colegio'},{id:'terapia',n:'Terapia'},{id:'parque',n:'Parque'},{id:'social',n:'Reunión familiar'},{id:'otro',n:'Otro lugar'}];
+const EFE=[{id:2,n:'Sí ayudó',cls:'ok'},{id:1,n:'Un poco',cls:'warn'},{id:0,n:'No ayudó',cls:'bad'}];
+const FRANJAS=[{id:'manana',n:'Mañana',r:[5,11]},{id:'mediodia',n:'Mediodía',r:[11,14]},{id:'tarde',n:'Tarde',r:[14,19]},{id:'noche',n:'Noche',r:[19,29]}];
+/* TEA nivel 1 */
+const ANTE=[{id:'noentiende',n:'No le entendimos lo que quería'},{id:'cambio',n:'Cambio de rutina o de plan'},{id:'trans',n:'Pasar de una actividad a otra'},{id:'no',n:'Le dijeron que no'},{id:'demanda',n:'Tarea o pedido difícil'},{id:'sens',n:'Ruido, luz o textura'},{id:'social',n:'Situación social difícil'},{id:'interes',n:'Interrumpir su tema o juego'},{id:'espera',n:'Tener que esperar'},{id:'cuerpo',n:'Cansancio o hambre'},{id:'nose',n:'Sin causa clara'}];
+const CONDUCTA=[{id:'crisis',n:'Crisis: llanto o gritos'},{id:'piso',n:'Se tira al piso'},{id:'tira',n:'Tira objetos'},{id:'shutdown',n:'Se desconecta o se aísla'},{id:'rigidez',n:'Insiste en que sea igual'},{id:'repite',n:'Repite preguntas o frases'},{id:'tema',n:'Solo habla de su tema'},{id:'niega',n:'Se niega a hacerlo'},{id:'huye',n:'Se va o se escapa'},{id:'agresion',n:'Golpea o empuja'},{id:'autolesion',n:'Se hace daño'},{id:'estereo',n:'Movimientos repetitivos intensos'}];
+const RIESGO=['agresion','autolesion','huye'];
+const CONSEC=[{id:'espacio',n:'Le dimos tiempo y espacio'},{id:'validar',n:'Validamos lo que sentía'},{id:'anticipar',n:'Explicamos o anticipamos'},{id:'opciones',n:'Le ofrecimos dos opciones'},{id:'sensorial',n:'Estrategia sensorial'},{id:'primero',n:'Primero–después'},{id:'cede',n:'Le dimos lo que pedía'},{id:'retira',n:'Quitamos la tarea'},{id:'regano',n:'Regaño o castigo'},{id:'ignorar',n:'No le prestamos atención'}];
+const DESENLACE=[{id:2,n:'Se calmó rápido',cls:'ok'},{id:1,n:'Tardó en calmarse',cls:'warn'},{id:0,n:'Empeoró',cls:'bad'}];
+const APOYO=[{v:0,n:'No lo logró',s:'No lo logró'},{v:1,n:'Con modelo o ayuda total',s:'Ayuda total'},{v:2,n:'Con ayuda parcial',s:'Ayuda parcial'},{v:3,n:'Con un recordatorio',s:'Recordatorio'},{v:4,n:'Solo, sin ayuda',s:'Independiente'}];
+const AREAS=[{id:'leng',n:'Comunicación y lenguaje',c:'var(--aud)'},{id:'soc',n:'Interacción social',c:'var(--pro)'},{id:'flex',n:'Flexibilidad',c:'var(--ves)'},{id:'emo',n:'Emociones',c:'var(--tac)'},{id:'auto',n:'Autonomía',c:'var(--int)'}];
+const QUIEN=['Fonoaudiología','Terapia ocupacional','Psicología','Colegio','Familia'];
+const NIVELES={emerg:'habla poco o se le entiende poco',frases:'usa frases cortas',fluido:'conversa con fluidez'};
+const FORMAS=[{id:'mira',n:'Mirada'},{id:'lleva',n:'Llevó de la mano'},{id:'senala',n:'Señaló'},{id:'gesto',n:'Gesto o seña'},{id:'picto',n:'Imagen o pictograma'},{id:'sonido',n:'Sonido o aproximación'},{id:'palabra',n:'Palabra'},{id:'frase',n:'Frase de 2 o más palabras'}];
+const TIPOS=[{id:'sonido',n:'Sonido o palabra'},{id:'sena',n:'Seña'},{id:'gesto',n:'Gesto o acción'},{id:'picto',n:'Imagen'}];
+const FRASE_PH={emerg:['Ej.: «aba»','Escribe cómo sonó, aunque no sea la palabra completa, y en el detalle qué quería decir (agua).'],frases:['Ej.: «quiero jugo»','Las frases textuales ayudan a fonoaudiología a ver cómo crece su lenguaje.'],fluido:['Ej.: «¿Puedo jugar contigo con los carros?»','Las frases textuales ayudan a fonoaudiología a ver el avance del lenguaje pragmático.']};
+/* biblioteca de objetivos por nivel de lenguaje; b y m solo se usan para generar el ejemplo */
+const OBJ_LIB={
+ emerg:[
+  {id:'e1',t:'Pide lo que quiere señalando, con una imagen o con una seña',a:'leng',q:'Fonoaudiología',b:1.2,m:.18},
+  {id:'e2',t:'Usa un sonido o una palabra para pedir algo (las aproximaciones cuentan)',a:'leng',q:'Fonoaudiología',b:.5,m:.15},
+  {id:'e3',t:'Imita un sonido, gesto o acción del adulto',a:'leng',q:'Fonoaudiología',b:1.4,m:.13},
+  {id:'e4',t:'Responde cuando lo llaman por su nombre',a:'soc',q:'Psicología',b:1.5,m:.09},
+  {id:'e5',t:'Muestra o señala algo para compartirlo con otra persona',a:'soc',q:'Psicología',b:.8,m:.03},
+  {id:'e6',t:'Juega a turnos simples: rodar la pelota, encajar fichas',a:'soc',q:'Terapia ocupacional',b:1.2,m:.12},
+  {id:'e7',t:'Acepta terminar una actividad con aviso visual',a:'flex',q:'Psicología',b:1,m:.15},
+  {id:'e8',t:'Dice «no quiero» o «terminé» con gesto, seña o palabra en vez de llorar',a:'emo',q:'Psicología',b:.7,m:.14},
+  {id:'e9',t:'Colabora al vestirse metiendo brazos y piernas',a:'auto',q:'Terapia ocupacional'},
+  {id:'e10',t:'Sigue una instrucción sencilla con gesto («dame», «ven», «siéntate»)',a:'leng',q:'Fonoaudiología'}],
+ frases:[
+  {id:'f1',t:'Pide ayuda con palabras («ayuda», «no puedo»)',a:'leng',q:'Fonoaudiología'},
+  {id:'f2',t:'Responde preguntas simples: ¿qué es?, ¿dónde está?',a:'leng',q:'Fonoaudiología'},
+  {id:'f3',t:'Une dos o tres palabras para pedir o contar algo',a:'leng',q:'Fonoaudiología'},
+  {id:'f4',t:'Saluda y se despide cuando se lo recuerdan',a:'soc',q:'Psicología'},
+  {id:'f5',t:'Juega con otro niño a turnos durante 5 minutos',a:'soc',q:'Terapia ocupacional'},
+  {id:'f6',t:'Acepta un cambio de plan avisado con una imagen',a:'flex',q:'Psicología'},
+  {id:'f7',t:'Nombra si está feliz, triste o bravo',a:'emo',q:'Psicología'},
+  {id:'f8',t:'Se lava las manos siguiendo la secuencia con imágenes',a:'auto',q:'Terapia ocupacional'}],
+ fluido:[
+  {id:'o1',t:'Inicia una conversación con un compañero o adulto',a:'leng',q:'Fonoaudiología'},
+  {id:'o2',t:'Mantiene 3 turnos de conversación sobre un tema que no es su interés',a:'leng',q:'Fonoaudiología'},
+  {id:'o3',t:'Pide ayuda con palabras cuando algo le frustra',a:'leng',q:'Psicología'},
+  {id:'o4',t:'Entiende bromas o frases con doble sentido',a:'leng',q:'Fonoaudiología'},
+  {id:'o5',t:'Juega con un compañero respetando turnos',a:'soc',q:'Terapia ocupacional'},
+  {id:'o6',t:'Acepta un cambio de plan avisado con 5 minutos',a:'flex',q:'Psicología'},
+  {id:'o7',t:'Nombra cómo se siente cuando está molesto',a:'emo',q:'Psicología'},
+  {id:'o8',t:'Se viste solo por la mañana',a:'auto',q:'Terapia ocupacional'}]};
+const OBJ_SEED=OBJ_LIB.emerg.slice(0,8);
+const FRASES={e2:[['aba','agua'],['ma','más'],['ota','pelota'],['ca','carro']],e3:[['brrrum','imitó el carro'],['muuu','imitó la vaca']],e8:[['no','no quería más']]};
+const ESTR=[
+ {id:'anticipar',n:'Anticipar lo que viene',r:['sobre'],s:['aud','tac','vis','olf'],d:'Avisar antes del ruido, el corte de pelo o el cambio de actividad. Usar una imagen o un temporizador visible.'},
+ {id:'protectores',n:'Protectores auditivos',r:['sobre'],s:['aud'],d:'Tenerlos a mano en lugares ruidosos (centro comercial, fiestas, recreo). Usarlos como apoyo, no todo el día.'},
+ {id:'rincon',n:'Rincón de calma',r:['sobre'],g:'cond',s:['aud','vis','tac','int'],d:'Un espacio con poca luz, cojines y pocos objetos al que pueda ir cuando se sobrecarga. Que sea un refugio, nunca un castigo.'},
+ {id:'presion',n:'Presión profunda',r:['sobre','busq'],s:['tac','pro'],d:'Abrazo firme, envolverse en una cobija o un masaje con presión si el niño lo acepta. Preguntar siempre antes de tocar.'},
+ {id:'trabajo',n:'Trabajo pesado',r:['busq','sobre'],s:['pro','ves'],d:'Empujar la pared, cargar la canasta de ropa, carretilla, subir escaleras. Organiza el cuerpo y suele calmar.'},
+ {id:'respirar',n:'Respirar juntos',r:['sobre'],s:['int','aud','tac'],d:'El adulto respira lento y profundo primero; el niño se regula imitando el ritmo. Inflar un globo o soplar burbujas ayuda.'},
+ {id:'voz',n:'Bajar la voz y las palabras',r:['sobre'],g:'cond',s:['aud'],d:'En plena crisis, hablar poco, despacio y en voz baja. Las explicaciones se dejan para cuando esté tranquilo.'},
+ {id:'ropa',n:'Ajustar ropa y texturas',r:['sobre'],s:['tac'],d:'Quitar etiquetas, usar costuras planas, dejar que elija telas. Introducir texturas nuevas de a poco y jugando.'},
+ {id:'comida',n:'Exposición gradual a alimentos',r:['sobre'],s:['olf','tac'],d:'Un alimento nuevo pequeño junto a uno que ya acepta, sin obligar. Tocar u oler ya cuenta como avance.'},
+ {id:'mover',n:'Pausas de movimiento',r:['busq','baja'],s:['ves','pro'],d:'Saltar, columpiarse en línea recta o caminar rápido antes de tareas que piden quietud.'},
+ {id:'alerta',n:'Activar antes de empezar',r:['baja'],s:['ves','pro','int','vis'],d:'Para niños que parecen desconectados: agua fría en la cara, música con ritmo, movimientos rápidos y cambios de posición.'},
+ {id:'seguro',n:'Ofrecer estímulo seguro',r:['busq'],s:['tac','ves','pro','olf'],d:'Si busca chocar o morder, darle una alternativa permitida: cojines para lanzarse, mordedor, plastilina, trampolín.'},
+ {id:'rutina',n:'Rutina visual',r:['sobre','baja','busq'],g:'cond',s:['vis','int'],d:'Una secuencia con dibujos para mañana, baño o dormir. Reduce la incertidumbre y las negociaciones.'},
+ {id:'cuerpo',n:'Señales del cuerpo',r:['baja'],s:['int'],d:'Recordar ir al baño, tomar agua o comer en horarios fijos si no reconoce hambre, sed o ganas.'},
+ /* lv: niveles de lenguaje en que aplica (sin lv = todos); d2: versión para niños que hablan poco */
+ {id:'cuandonoentiendo',n:'Cuando no le entiendes',r:[],g:'com',lv:['emerg','frases'],d:'Repite lo que creíste entender («¿agua?»), pídele que te muestre («enséñame»), ofrécele dos opciones o sigue su mirada. Es mejor admitir que no entendiste que fingir. Anota sus sonidos en «Sus palabras y señas» para que otros adultos también le entiendan.'},
+ {id:'mensaje',n:'Leer la conducta como mensaje',r:[],g:'cond',lv:['emerg','frases'],d:'Cuando llora, se tira al piso o tira cosas, pregúntate qué quiere decir: ¿quiere algo, quiere que pare, le duele algo? La próxima vez, dale una forma más fácil de decirlo, como una seña o una imagen.'},
+ {id:'pictos',n:'Imágenes para pedir',r:[],g:'com',lv:['emerg','frases'],d:'Fotos o dibujos de lo que más pide (agua, galleta, parque, baño) pegados en la nevera o en un llavero. Él entrega o señala la imagen y tú dices la palabra en voz alta. Usar imágenes no frena el habla; suele ayudarla.'},
+ {id:'senas',n:'Señas sencillas',r:[],g:'com',lv:['emerg'],d:'Acompaña unas pocas palabras clave con un gesto siempre igual: «más», «terminó», «ayuda», «comer». Las señas le dan una forma de pedir mientras aparecen las palabras.'},
+ {id:'tentaciones',n:'Crear razones para pedir',r:[],g:'com',lv:['emerg','frases'],d:'Pon algo que le gusta a la vista pero fuera de su alcance, dale la galleta en pedacitos o el frasco cerrado. Espera a que se comunique (mirada, gesto, sonido) antes de ayudarle. Que sea un juego, no una prueba.'},
+ {id:'imitar',n:'Imitar sus sonidos y juegos',r:[],g:'com',lv:['emerg'],d:'Haz lo mismo que él: si golpea la mesa, golpea; si dice «ba», di «ba». Cuando nota que lo imitan suele mirar y querer repetir, y así empiezan los primeros turnos.'},
+ {id:'cara',n:'Jugar cara a cara',r:[],g:'com',lv:['emerg'],d:'Ponte a su altura, frente a él, con el juguete cerca de tu cara. Así es más fácil que te mire, te imite y se comunique contigo.'},
+ {id:'frasecorta',n:'Hablarle corto y claro',r:[],g:'com',lv:['emerg','frases'],d:'Usa frases apenas un poco más largas que las suyas: si no habla, una palabra; si dice una, dos. «Zapato. Pon zapato.» Pocas palabras, dichas despacio y con gesto, se entienden mejor.'},
+ {id:'canciones',n:'Canciones con pausa',r:[],g:'com',lv:['emerg'],d:'Canta una canción que conoce y detente antes de la última palabra («los pollitos dicen…»), mirándolo con expectativa. Cualquier sonido o gesto para completarla cuenta.'},
+ {id:'caritas',n:'Caritas de emociones',r:[],g:'com',lv:['emerg'],d:'Tres caritas dibujadas (feliz, triste, bravo) para que señale cómo se siente. Cuando señale una, nómbrala con una palabra: «bravo».'},
+ {id:'secuencia',n:'Secuencia con fotos',r:[],g:'cond',lv:['emerg'],d:'Antes de una situación nueva o difícil (médico, peluquería, vacuna), muéstrale 3 o 4 fotos en orden de lo que va a pasar. Repásalas en el momento.'},
+ {id:'historia',n:'Historias sociales',r:[],g:'cond',lv:['frases','fluido'],d:'Un cuento corto con dibujos que explica una situación nueva (ir al odontólogo, un cumpleaños, un reemplazo de profesor) y qué puede esperar en ella.'},
+ {id:'temporizador',n:'Avisar las transiciones',r:[],g:'cond',d:'Avisar a los 5 y a los 2 minutos antes de terminar una actividad. Un reloj de arena o un temporizador visual hace concreto el tiempo.',d2:'Antes de terminar una actividad, muéstrale un reloj de arena o cuenta con los dedos «3, 2, 1, terminó» haciendo la seña. Ver el tiempo le ayuda más que escuchar «ya casi».'},
+ {id:'opciones',n:'Ofrecer dos opciones',r:[],g:'cond',d:'«¿Te bañas antes o después de comer?» Elegir entre dos le da control y reduce la negativa, sin abrir una negociación.',d2:'Muéstrale dos objetos reales, uno en cada mano («¿jugo o agua?»), y deja que mire, señale o tome uno. Nombra lo que eligió.'},
+ {id:'primero',n:'Primero–después',r:[],g:'cond',d:'«Primero la tarea, después el columpio.» Con dibujos si hace falta. Funciona mejor cuando lo de después es algo que él valora.',d2:'Dos fotos o dibujos lado a lado: «primero zapatos, después parque», señalando cada una. Lo de después tiene que ser algo que le guste mucho.'},
+ {id:'validar',n:'Validar antes de corregir',r:[],g:'cond',d:'Nombrar lo que siente («estás bravo porque cambió el plan») antes de explicar o poner un límite. Sentirse entendido baja la intensidad.',d2:'Pon en una o dos palabras lo que siente, con tu cara y tu gesto: «bravo», «no quieres». Aunque no hable, entiende el tono y se siente acompañado.'},
+ {id:'stim',n:'Permitir la autoestimulación segura',r:[],g:'cond',d:'Aletear, balancearse o repetir sonidos suele ayudarle a regularse y concentrarse. Solo hace falta intervenir si le causa daño o le impide participar.'},
+ {id:'literal',n:'Decir las cosas de forma directa',r:[],g:'com',lv:['frases','fluido'],d:'Explicar bromas, ironías y frases hechas («me muero de la risa»). Muchos niños con autismo entienden el lenguaje de forma literal.'},
+ {id:'guion',n:'Guiones para conversar',r:[],g:'com',lv:['fluido'],d:'Practicar en juego de roles frases para iniciar, mantener o cerrar una conversación («¿Puedo jugar?», «¿Y tú qué hiciste?») antes de usarlas con otros niños.'},
+ {id:'interes',n:'Usar su interés como puente',r:[],g:'com',d:'Si le encantan los dinosaurios, practicar turnos de conversación, lectura o preguntas con dinosaurios. El interés motiva; no hay que eliminarlo.',d2:'Si le encantan los carros, juega con carros frente a él y nombra lo que pasa: «carro», «rápido», «pare». En el juego que le gusta es donde más se comunica.'},
+ {id:'esperar',n:'Darle tiempo para responder',r:[],g:'com',d:'Esperar de 5 a 10 segundos en silencio después de una pregunta, sin repetirla enseguida. Procesar el lenguaje puede tomarle más tiempo.',d2:'Antes de darle lo que quiere, espera de 5 a 10 segundos mirándolo con expectativa. Así tiene la oportunidad de pedirlo con la mirada, un gesto o un sonido.'},
+ {id:'termometro',n:'Termómetro de emociones',r:[],g:'com',lv:['frases','fluido'],d:'Una escala de colores o números para que señale cómo se siente cuando aún no encuentra las palabras. Con el tiempo se va acompañando de frases.'},
+ {id:'expandir',n:'Ampliar lo que dice',r:[],g:'com',d:'Si dice «carro», responder «sí, un carro rojo que va rápido». Repetir su idea con una o dos palabras más le muestra cómo alargar las frases.',d2:'Si dice «aba», responde «agua, quiero agua» y dásela. Repite lo que intentó decir con la palabra completa, sin pedirle que la repita ni corregirlo.'}];
+const SFILT=[{id:'all',n:'Todas'},...RESP,{id:'com',n:'Comunicación y lenguaje',c:'var(--aud)'},{id:'cond',n:'Conducta y flexibilidad',c:'var(--ves)'}];
+const PLAN_SEED=[
+ {f:'manana',a:'Carretilla o empujar la pared 3 minutos antes de vestirse'},
+ {f:'manana',a:'Mostrarle la agenda del día con fotos: casa, jardín, almuerzo, parque'},
+ {f:'mediodia',a:'Pausa de movimiento al llegar del jardín'},
+ {f:'tarde',a:'10 minutos de columpio lineal en el parque'},
+ {f:'tarde',a:'Juego cara a cara con burbujas: esperar a que pida «más» con seña o sonido'},
+ {f:'tarde',a:'Imágenes de comida en la nevera a la hora de la merienda para que elija'},
+ {f:'noche',a:'Baño con luz tenue y toalla con presión firme'},
+ {f:'noche',a:'Canción de siempre antes de dormir, con pausas para que la complete'}];
+
+const K='bitacora-sensorial-v3',KOLD=['bitacora-sensorial-v2','bitacora-sensorial-v1'];
+const dayKey=d=>{const x=new Date(d);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')};
+function rnd(seed){let s=seed;return()=>{s=(s*9301+49297)%233280;return s/233280}}
+function lsGet(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}}
+/* v3.3: save comprueba que el navegador realmente guardó; si no, avisa en pantalla */
+let storageOk=true;
+function save(){
+  let ok=false;
+  try{const s=JSON.stringify(S);localStorage.setItem(K,s);ok=localStorage.getItem(K)===s}catch(e){ok=false}
+  if(ok!==storageOk){storageOk=ok;if(typeof updateBanners==='function')updateBanners()}
+  return ok;
+}
+function seedObjetivos(){return OBJ_SEED.map(o=>({id:o.id,texto:o.t,area:o.a,quien:o.q,archivado:false}))}
+function seed(){
+  const r=rnd(42),entries=[],checkins=[],conductas=[],logros=[];const now=new Date();
+  const pick=a=>a[Math.floor(r()*a.length)];
+  const weighted=pairs=>{let t=pairs.reduce((a,p)=>a+p[1],0),x=r()*t;for(const p of pairs){if((x-=p[1])<=0)return p[0]}return pairs[0][0]};
+  for(let d=13;d>=0;d--){
+    const base=new Date(now);base.setDate(now.getDate()-d);
+    const wk=base.getDay();const school=wk>0&&wk<6;const idx=13-d;
+    let dayLoad=0;
+    const n=Math.floor(r()*3)+(school?1:0);
+    for(let i=0;i<n;i++){
+      const sis=weighted([['aud',5],['tac',4],['pro',2],['ves',2],['olf',2],['vis',1],['int',1]]);
+      const resp=sis==='pro'||sis==='ves'?weighted([['busq',3],['baja',1]]):weighted([['sobre',5],['baja',1],['busq',1]]);
+      const ctx=sis==='aud'?pick(school?['colegio','calle','social','colegio']:['calle','social','casa']):sis==='tac'?pick(['vestir','aseo','comida']):sis==='olf'?'comida':pick(['casa','colegio','sueno','casa']);
+      const h=ctx==='sueno'?20+Math.floor(r()*2):ctx==='colegio'?8+Math.floor(r()*5):ctx==='vestir'?6+Math.floor(r()*2):ctx==='aseo'?pick([7,19,20]):9+Math.floor(r()*10);
+      const t=new Date(base);t.setHours(h,Math.floor(r()*60),0,0);
+      const cand=ESTR.filter(e=>e.r.includes(resp)&&e.s&&e.s.includes(sis));const est=(cand.length?pick(cand):ESTR[0]).id;
+      const inten=1+Math.floor(r()*5);
+      const good=['presion','trabajo','protectores','anticipar','rincon'].includes(est);
+      const efe=good?weighted([[2,6],[1,3],[0,1]]):weighted([[2,2],[1,3],[0,3]]);
+      dayLoad+=inten;
+      entries.push({id:'e'+d+'_'+i,ts:t.toISOString(),contexto:ctx,sistema:sis,respuesta:resp,intensidad:inten,duracion:5+Math.floor(r()*35),estrategia:est,efectividad:efe,nota:'',ejemplo:true});
+    }
+    /* conductas: más en días de colegio, disminuyen levemente */
+    const nc=Math.max(0,Math.round(r()*1.6+(school?0.6:0)-idx*0.04));
+    for(let i=0;i<nc;i++){
+      const ante=weighted([['noentiende',Math.max(1,5-idx*0.25)],['trans',4],['cambio',3],['no',3],['sens',3],['interes',2],['espera',2],['social',1],['cuerpo',1],['nose',1]]);
+      const cond=ante==='noentiende'?weighted([['crisis',3],['piso',3],['tira',2]]):ante==='cambio'?weighted([['crisis',3],['rigidez',3],['piso',1]]):ante==='trans'||ante==='interes'?weighted([['piso',3],['niega',2],['crisis',2]]):ante==='social'?weighted([['shutdown',3],['huye',1]]):ante==='sens'?weighted([['crisis',2],['huye',2],['estereo',2]]):weighted([['crisis',2],['piso',2],['tira',2],['agresion',1]]);
+      const cons=weighted([['validar',3],['anticipar',3],['espacio',3],['opciones',2],['primero',2],['sensorial',2],['cede',2],['regano',2],['retira',1]]);
+      const goodC=['validar','espacio','anticipar','opciones','sensorial'].includes(cons);
+      const des=cons==='regano'?weighted([[0,4],[1,3],[2,1]]):goodC?weighted([[2,6],[1,3],[0,1]]):weighted([[2,2],[1,3],[0,2]]);
+      const ctx=school&&r()<.55?'colegio':pick(['casa','casa','calle','social','comida']);
+      const h=ctx==='colegio'?7+Math.floor(r()*6):pick([7,14,16,17,18,19,20]);
+      const t=new Date(base);t.setHours(h,Math.floor(r()*60),0,0);
+      const inten=1+Math.floor(r()*4)+(cons==='regano'?1:0);
+      dayLoad+=inten;
+      conductas.push({id:'c'+d+'_'+i,ts:t.toISOString(),contexto:ctx,antecedente:ante,conducta:cond,intensidad:Math.min(5,inten),duracion:3+Math.floor(r()*25),consecuencia:cons,desenlace:des,nota:'',ejemplo:true});
+    }
+    /* logros: 2 observaciones por día con tendencia */
+    const obs=[OBJ_SEED[(idx*2)%8],OBJ_SEED[(idx*2+1)%8],OBJ_SEED[(idx*3+5)%8]];
+    obs.forEach((o,i)=>{
+      const lvl=Math.max(0,Math.min(4,Math.round(o.b+o.m*idx+(r()-.5)*0.9)));
+      const t=new Date(base);t.setHours(pick([8,10,15,17,19]),Math.floor(r()*60),0,0);
+      const fr=FRASES[o.id]&&lvl>=2&&r()<.65?pick(FRASES[o.id]):null;
+      const p=idx/13;
+      let formas=[];
+      if(o.a==='leng'||o.a==='emo'||o.a==='soc'){
+        formas=[weighted([['mira',2],['lleva',3-p*2],['senala',2+p],['gesto',1+p*2]])];
+        if(r()<.3+p*.5)formas.push(weighted([['sonido',2+p*2],['picto',1.5],['palabra',p*2]]));
+        if(fr)formas=[...new Set([...formas,fr[0]==='no'?'palabra':'sonido'])];
+      }
+      logros.push({id:'l'+d+'_'+i,ts:t.toISOString(),objetivo:o.id,apoyo:lvl,lugar:o.a==='auto'?'casa':pick(['casa','colegio','terapia','parque']),formas,frase:fr?fr[0]:'',nota:fr?'Quería decir: '+fr[1]+'.':'',ejemplo:true});
+    });
+    const stress=Math.max(1,Math.min(10,Math.round(1.5+dayLoad*0.4+r()*2)));
+    checkins.push({fecha:dayKey(base),estres:stress,sueno:pick(['bien','regular','mal']),apoyo:pick(['si','poco','no']),ejemplo:true});
+  }
+  const fa=entries.find(e=>e.sistema==='aud'&&e.contexto==='calle');if(fa)fa.nota='Secador de manos en el baño del centro comercial; se tapó los oídos y lloró.';
+  const ft=entries.find(e=>e.sistema==='tac');if(ft)ft.nota='No quiso ponerse las medias nuevas; dijo que le picaban.';
+  const fc=conductas.find(c=>c.antecedente==='noentiende');if(fc)fc.nota='Decía «aba» señalando la cocina y no le entendimos; se tiró al piso. Era agua.';
+  const fl=logros.filter(l=>l.objetivo==='e5').pop();if(fl)fl.nota='Me jaló la mano para que mirara un avión y me miró a mí después.';
+  const dd=n=>{const x=new Date(now);x.setDate(x.getDate()-n);return x.toISOString()};
+  const palabras=[
+    ['Te lleva de la mano a la puerta','gesto','Quiere salir',60],['aba','sonido','Agua',40],
+    ['Se toca la boca con los dedos','sena','Comer o tengo hambre',30],['ma (y junta las puntas de los dedos)','sena','Más',25],
+    ['Mueve las manos abiertas a los lados','sena','Terminó',12],['ota','sonido','Pelota',9],
+    ['pa','sonido','Papá o parque: depende de lo que esté mirando',6],['ca','sonido','Carro',3]
+  ].map((w,i)=>({id:'w'+i,forma:w[0],tipo:w[1],significa:w[2],ts:dd(w[3]),ejemplo:true}));
+  return {nombre:'Tomás (ejemplo)',edad:'4 años y 10 meses',perfil:'tea1',nivel:'emerg',entries,conductas,logros,palabras,objetivos:seedObjetivos(),checkins,plan:PLAN_SEED.map((p,i)=>({id:'p'+i,franja:p.f,actividad:p.a,done:{}})),ejemplos:true};
+}
+function boot(){
+  const v=lsGet(K);if(v)return v;
+  for(const k of KOLD){const o=lsGet(k);if(o&&['entries','conductas','logros'].some(c=>(o[c]||[]).some(e=>!e.ejemplo)))return Object.assign({nivel:'fluido',edad:'',palabras:[],conductas:[],logros:[],objetivos:seedObjetivos()},o)}
+  return seed();
+}
+let S=boot();
+if(!S.nivel)S.nivel='emerg';
+['conductas','logros','objetivos','entries','checkins','plan','palabras','borrados','cuidadores'].forEach(k=>{if(!Array.isArray(S[k]))S[k]=[]});
+/* v3.3: identidad del dispositivo y del cuidador, para unir copias de varias personas */
+if(!S.dispositivo)S.dispositivo=Math.random().toString(36).slice(2,8);
+if(typeof S.cuidador!=='string')S.cuidador='';
+const uid=p=>`${p}-${S.dispositivo}-${Date.now().toString(36)}${Math.random().toString(36).slice(2,6)}`;
+const por=()=>S.cuidador.trim();
+
+const $=s=>document.querySelector(s);
+const $$=s=>[...document.querySelectorAll(s)];
+const byId=(arr,id)=>arr.find(x=>x.id==id);
+function toast(t){const el=$('#toast');el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2200)}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+const mean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
+function lastDays(){const out=[];for(let d=13;d>=0;d--){const x=new Date();x.setDate(x.getDate()-d);out.push(dayKey(x))}return out}
+
+/* tabs */
+const tabs=$$('nav.tabs button');
+function show(t){tabs.forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===t));$$('section[id^=tab-]').forEach(s=>s.hidden=s.id!=='tab-'+t);render()}
+tabs.forEach(b=>b.onclick=()=>show(b.dataset.tab));
+const hsh=(location.hash||'').slice(1);if(tabs.some(b=>b.dataset.tab===hsh))setTimeout(()=>show(hsh));
+
+/* header */
+$('#kidName').value=S.nombre||'';
+$('#kidName').oninput=e=>{S.nombre=e.target.value;save()};
+$('#kidPerfil').value=S.perfil||'tea1';
+$('#kidPerfil').onchange=e=>{S.perfil=e.target.value;save();render()};
+function fillCuidadores(){
+  const names=[...new Set([...S.cuidadores,...['entries','conductas','logros','checkins'].flatMap(k=>S[k].map(x=>x.por).filter(Boolean))])];
+  $('#cuidList').innerHTML=names.map(n=>`<option value="${esc(n)}"></option>`).join('');
+}
+$('#kidCuidador').value=S.cuidador;
+$('#kidCuidador').oninput=e=>{S.cuidador=e.target.value;save()};
+$('#kidCuidador').onchange=e=>{const n=e.target.value.trim();S.cuidador=n;if(n&&!S.cuidadores.includes(n))S.cuidadores.push(n);save();fillCuidadores();render()};
+fillCuidadores();
+$('#kidEdad').value=S.edad||'';
+$('#kidEdad').oninput=e=>{S.edad=e.target.value;save()};
+$('#kidNivel').value=S.nivel;
+function applyNivel(){const ph=FRASE_PH[S.nivel];$('#lFrase').placeholder=ph[0];$('#lFraseHint').textContent=ph[1]}
+$('#kidNivel').onchange=e=>{S.nivel=e.target.value;save();applyNivel();render();toast('Estrategias y objetivos sugeridos ajustados')};
+
+/* chips */
+function chips(el,name,items,type,checked){
+  el.innerHTML=items.map(it=>{const id=it.id!==undefined?it.id:it.v;return `<label class="chip" style="--c:${it.c||'var(--accent)'}" title="${esc(it.d||'')}"><input type="${type}" name="${name}" value="${id}" ${checked==id?'checked':''}><span>${it.c?'<i class="dot"></i>':''}${it.v!==undefined?`<small>${it.v}</small>`:''}${esc(it.n)}</span></label>`}).join('');
+}
+chips($('#fContexto'),'ctx',CONTEXTOS,'radio','casa');
+chips($('#fSistema'),'sis',SISTEMAS,'radio','aud');
+chips($('#fRespuesta'),'resp',RESP,'radio','sobre');
+chips($('#fEfe'),'efe',EFE,'radio',2);
+chips($('#cContexto'),'cctx',CONTEXTOS,'radio','casa');
+chips($('#cAnte'),'ante',ANTE,'radio','cambio');
+chips($('#cCond'),'cond',CONDUCTA,'radio','crisis');
+chips($('#cCons'),'cons',CONSEC,'radio','validar');
+chips($('#cDes'),'des',DESENLACE,'radio',2);
+chips($('#lApoyo'),'apoyo',APOYO,'radio',2);
+chips($('#lForma'),'forma',FORMAS,'checkbox',null);
+$('#dTipo').innerHTML=TIPOS.map(t=>`<option value="${t.id}">${t.n}</option>`).join('');
+applyNivel();
+chips($('#sSueno'),'sueno',[{id:'bien',n:'Bien'},{id:'regular',n:'Regular'},{id:'mal',n:'Mal'}],'radio','regular');
+chips($('#sApoyo'),'sapoyo',[{id:'si',n:'Sí'},{id:'poco',n:'Un poco'},{id:'no',n:'No'}],'radio','poco');
+$('#fEst').innerHTML=ESTR.filter(e=>e.s).map(e=>`<option value="${e.id}">${esc(e.n)}</option>`).join('')+'<option value="otra">Otra / ninguna</option>';
+$('#pFranja').innerHTML=FRANJAS.map(f=>`<option value="${f.id}">${f.n}</option>`).join('');
+$('#lLugar').innerHTML=LUGARES.map(l=>`<option value="${l.id}">${l.n}</option>`).join('');
+$('#gArea').innerHTML=AREAS.map(a=>`<option value="${a.id}">${a.n}</option>`).join('');
+$('#gQuien').innerHTML=QUIEN.map(q=>`<option>${q}</option>`).join('');
+function fillObjSelect(){
+  const act=S.objetivos.filter(o=>!o.archivado);
+  $('#lObj').innerHTML=AREAS.map(a=>{const os=act.filter(o=>o.area===a.id);return os.length?`<optgroup label="${a.n}">${os.map(o=>`<option value="${o.id}">${esc(o.texto)}</option>`).join('')}</optgroup>`:''}).join('')+'<option value="otro">Otro avance (descríbelo en el detalle)</option>';
+}
+fillObjSelect();
+function nowLocal(){const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)}
+['#fTime','#cTime','#lTime'].forEach(s=>$(s).value=nowLocal());
+$('#fInt').oninput=e=>$('#fIntVal').textContent=e.target.value;
+$('#cInt').oninput=e=>$('#cIntVal').textContent=e.target.value;
+$('#sVal').oninput=e=>$('#sValOut').textContent=e.target.value;
+const val=n=>{const x=document.querySelector(`input[name="${n}"]:checked`);return x?x.value:null};
+function suggest(){const s=val('sis'),r=val('resp');const c=ESTR.find(e=>e.s&&e.r.includes(r)&&e.s.includes(s));if(c)$('#fEst').value=c.id}
+$$('input[name=sis],input[name=resp]').forEach(i=>i.addEventListener('change',suggest));
+const FORMS={sens:'#entryForm',cond:'#condForm',logro:'#logroForm'};
+$$('input[name=kind]').forEach(i=>i.addEventListener('change',()=>{Object.entries(FORMS).forEach(([k,s])=>$(s).hidden=k!==val('kind'))}));
+
+$('#entryForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  S.entries.push({id:uid('e'),por:por(),ts:new Date($('#fTime').value).toISOString(),contexto:val('ctx'),sistema:val('sis'),respuesta:val('resp'),intensidad:+$('#fInt').value,duracion:+$('#fDur').value||0,estrategia:$('#fEst').value,efectividad:+val('efe'),nota:$('#fNota').value.trim()});
+  save();$('#fNota').value='';$('#fTime').value=nowLocal();toast('Episodio guardado');
+});
+$('#condForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const c={id:uid('c'),por:por(),ts:new Date($('#cTime').value).toISOString(),contexto:val('cctx'),antecedente:val('ante'),conducta:val('cond'),intensidad:+$('#cInt').value,duracion:+$('#cDur').value||0,consecuencia:val('cons'),desenlace:+val('des'),nota:$('#cNota').value.trim()};
+  S.conductas.push(c);save();$('#cNota').value='';$('#cTime').value=nowLocal();
+  toast(RIESGO.includes(c.conducta)&&c.intensidad>=4?'Guardado. Comenta esta conducta pronto con tu equipo':'Conducta guardada');
+});
+$('#logroForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const obj=$('#lObj').value,nota=$('#lNota').value.trim(),frase=$('#lFrase').value.trim();
+  if(obj==='otro'&&!nota&&!frase){toast('Describe el avance en el detalle');$('#lNota').focus();return}
+  const prevBest=Math.max(-1,...S.logros.filter(l=>l.objetivo===obj).map(l=>l.apoyo));
+  const ap=+val('apoyo');
+  const formas=$$('input[name=forma]:checked').map(i=>i.value);
+  S.logros.push({id:uid('l'),por:por(),ts:new Date($('#lTime').value).toISOString(),objetivo:obj,apoyo:ap,lugar:$('#lLugar').value,formas,frase,nota});
+  save();$('#lNota').value='';$('#lFrase').value='';$('#lTime').value=nowLocal();$$('input[name=forma]').forEach(i=>i.checked=false);
+  toast(obj!=='otro'&&ap===4&&prevBest<4?'¡Primera vez sin ayuda! Avance guardado':'Avance guardado');
+});
+$('#stressForm').addEventListener('submit',e=>{
+  e.preventDefault();const f=dayKey(new Date());
+  S.checkins=S.checkins.filter(c=>!(c.fecha===f&&(c.por||'')===por()));
+  S.checkins.push({fecha:f,por:por(),estres:+$('#sVal').value,sueno:val('sueno'),apoyo:val('sapoyo')});
+  save();render();toast('Check-in guardado');
+});
+$('#planForm').addEventListener('submit',e=>{
+  e.preventDefault();const a=$('#pAct').value.trim();if(!a)return;
+  S.plan.push({id:uid('p'),franja:$('#pFranja').value,actividad:a,done:{}});$('#pAct').value='';save();render();
+});
+$('#goalForm').addEventListener('submit',e=>{
+  e.preventDefault();const t=$('#gText').value.trim();if(!t)return;
+  S.objetivos.push({id:uid('o'),texto:t,area:$('#gArea').value,quien:$('#gQuien').value,archivado:false});
+  $('#gText').value='';save();fillObjSelect();render();toast('Objetivo agregado');
+});
+$('#dictForm').addEventListener('submit',e=>{
+  e.preventDefault();const f=$('#dForma').value.trim(),s=$('#dSig').value.trim();if(!f||!s)return;
+  S.palabras.push({id:uid('w'),por:por(),forma:f,tipo:$('#dTipo').value,significa:s,ts:new Date().toISOString()});
+  $('#dForma').value='';$('#dSig').value='';save();render();toast('Agregado a sus palabras y señas');
+});
+function addGoal(t,a,q){S.objetivos.push({id:uid('o'),texto:t,area:a,quien:q,archivado:false});save();fillObjSelect();render();toast('Objetivo agregado')}
+let confirmClear=false;
+$('#clearExamples').onclick=e=>{
+  if(!confirmClear){confirmClear=true;e.target.textContent='Toca otra vez para confirmar';setTimeout(()=>{confirmClear=false;e.target.textContent='Borrar ejemplos y empezar'},4000);return}
+  ['entries','conductas','logros','checkins','palabras'].forEach(k=>S[k]=S[k].filter(x=>!x.ejemplo));S.ejemplos=false;
+  if(S.nombre==='Tomás (ejemplo)'){S.nombre='';S.edad=''}$('#kidName').value=S.nombre;$('#kidEdad').value=S.edad;save();render();toast('Ejemplos borrados. Los objetivos se mantienen para que los ajustes');
+};
+
+/* helpers de render */
+let diaryFilter='all',stratFilter='all',diaryLimit=150;
+function fmtTime(ts){return new Date(ts).toLocaleTimeString('es-CO',{hour:'numeric',minute:'2-digit'})}
+function fmtDay(ts){return new Date(ts).toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'})}
+function fmtShort(ts){return new Date(ts).toLocaleDateString('es-CO',{day:'numeric',month:'short'})}
+function franjaOf(ts){let hr=new Date(ts).getHours();if(hr<5)hr+=24;return (FRANJAS.find(f=>hr>=f.r[0]&&hr<f.r[1])||FRANJAS[3]).id}
+function inRange(arr){const lim=new Date();lim.setDate(lim.getDate()-13);lim.setHours(0,0,0,0);return arr.filter(e=>new Date(e.ts)>=lim)}
+function objName(id){const o=byId(S.objetivos,id);return o?o.texto:(id==='otro'?'Otro avance':'Objetivo eliminado')}
+function hitosSet(){const best={},set=new Set();S.logros.slice().sort((a,b)=>a.ts.localeCompare(b.ts)).forEach(l=>{if(l.objetivo!=='otro'&&l.apoyo===4&&!best[l.objetivo]){best[l.objetivo]=1;set.add(l.id)}});return set}
+
+/* diario */
+function renderDiary(){
+  const F=[{id:'all',n:'Todo'},{id:'sens',n:'Sensorial',c:'var(--aud)'},{id:'cond',n:'Conductas',c:'var(--warn)'},{id:'logro',n:'Avances',c:'var(--ok)'}];
+  $('#diaryFilters').innerHTML=F.map(s=>`<label class="chip" style="--c:${s.c||'var(--ink)'}"><input type="radio" name="df" value="${s.id}" ${diaryFilter===s.id?'checked':''}><span>${s.c?'<i class="dot"></i>':''}${s.n}</span></label>`).join('');
+  $$('input[name=df]').forEach(i=>i.onchange=()=>{diaryFilter=i.value;diaryLimit=150;renderDiary()});
+  const H=hitosSet();
+  const all=[...S.entries.map(x=>({k:'sens',x})),...S.conductas.map(x=>({k:'cond',x})),...S.logros.map(x=>({k:'logro',x}))]
+    .filter(r=>diaryFilter==='all'||r.k===diaryFilter).sort((a,b)=>b.x.ts.localeCompare(a.x.ts));
+  if(!all.length){$('#diaryList').innerHTML='<p class="note">Todavía no hay registros de este tipo. Usa la pestaña Registrar para anotar el primero.</p>';return}
+  let out='',last='';
+  /* v3.1: el diario muestra los registros por bloques de 150 (con un año de datos tardaba 1,5 s) */
+  const shown=all.slice(0,diaryLimit);
+  for(const {k,x:e} of shown){
+    const dk=dayKey(e.ts);if(dk!==last){if(last)out+='</div>';out+=`<div class="daygroup">${fmtDay(e.ts)}</div><div class="list">`;last=dk}
+    const ej=e.ejemplo?'<span class="pill">ejemplo</span>':'';
+    if(k==='sens'){
+      const s=byId(SISTEMAS,e.sistema),r=byId(RESP,e.respuesta),c=byId(CONTEXTOS,e.contexto),st=byId(ESTR,e.estrategia),ef=byId(EFE,e.efectividad);
+      out+=`<div class="entry" style="--c:${s.c}"><div class="stripe"></div><div style="min-width:0"><div class="kindtag">Sensorial</div><div class="what">${s.n} · ${r.n}</div><div class="meta">${fmtTime(e.ts)}${e.por?" · "+esc(e.por):""} · ${c.n} · ${e.duracion} min · intensidad ${e.intensidad}/5</div>${e.nota?`<div>${esc(e.nota)}</div>`:''}<div><span class="pill">${st?esc(st.n):'Otra estrategia'}</span><span class="pill ${ef.cls}">${ef.n}</span>${ej}</div></div><button class="x" aria-label="Borrar registro" data-del="entries:${e.id}">×</button></div>`;
+    }else if(k==='cond'){
+      const a=byId(ANTE,e.antecedente),b=byId(CONDUCTA,e.conducta),c=byId(CONSEC,e.consecuencia),d=byId(DESENLACE,e.desenlace),cx=byId(CONTEXTOS,e.contexto);
+      const risk=RIESGO.includes(e.conducta)&&e.intensidad>=4;
+      out+=`<div class="entry" style="--c:var(--warn)"><div class="stripe"></div><div style="min-width:0"><div class="kindtag">Conducta</div><div class="what">${b.n}</div><div class="meta">${fmtTime(e.ts)}${e.por?" · "+esc(e.por):""} · ${cx.n} · ${e.duracion} min · intensidad ${e.intensidad}/5</div><div class="meta">Antes: ${a.n}</div>${e.nota?`<div>${esc(e.nota)}</div>`:''}<div><span class="pill">${c.n}</span><span class="pill ${d.cls}">${d.n}</span>${ej}</div>${risk?'<div class="alert">Conducta de riesgo. Comenta este registro con tu equipo de salud.</div>':''}</div><button class="x" aria-label="Borrar registro" data-del="conductas:${e.id}">×</button></div>`;
+    }else{
+      const o=byId(S.objetivos,e.objetivo),ar=o?byId(AREAS,o.area):null,ap=APOYO[e.apoyo],l=byId(LUGARES,e.lugar);
+      out+=`<div class="entry" style="--c:var(--ok)"><div class="stripe"></div><div style="min-width:0"><div class="kindtag">Avance${ar?' · '+ar.n:''}</div><div class="what">${esc(objName(e.objetivo))}</div><div class="meta">${fmtTime(e.ts)}${e.por?" · "+esc(e.por):""} · ${l?l.n:''}${(e.formas||[]).length?' · se comunicó con: '+e.formas.map(f=>byId(FORMAS,f).n.toLowerCase()).join(', '):''}</div>${e.frase?`<p class="quote">«${esc(e.frase)}»</p>`:''}${e.nota?`<div>${esc(e.nota)}</div>`:''}<div><span class="pill ${e.apoyo>=3?'ok':e.apoyo>=1?'warn':'bad'}">${ap.n}</span>${H.has(e.id)?'<span class="pill star">Primera vez sin ayuda</span>':''}${ej}</div></div><button class="x" aria-label="Borrar registro" data-del="logros:${e.id}">×</button></div>`;
+    }
+  }
+  $('#diaryList').innerHTML=out+'</div>'+(all.length>shown.length?`<div style="margin-top:14px"><button class="btn small" id="diaryMore">Mostrar más (${all.length-shown.length} anteriores)</button></div>`:'');
+  const more=$('#diaryMore');if(more)more.onclick=()=>{diaryLimit+=150;renderDiary()};
+  $$('[data-del]').forEach(b=>b.onclick=()=>{const i=b.dataset.del.indexOf(':'),col=b.dataset.del.slice(0,i),id=b.dataset.del.slice(i+1);S[col]=S[col].filter(x=>x.id!==id);if(!S.borrados.includes(id))S.borrados.push(id);save();renderDiary();toast('Registro borrado')});
+}
+
+/* avances */
+function goalStats(oid,days){
+  const obs=S.logros.filter(l=>l.objetivo===oid);
+  const inWin=obs.filter(l=>days.includes(dayKey(l.ts)));
+  const prev=inWin.filter(l=>days.indexOf(dayKey(l.ts))<7).map(l=>l.apoyo),last=inWin.filter(l=>days.indexOf(dayKey(l.ts))>=7).map(l=>l.apoyo);
+  let a=mean(prev),b=mean(last);
+  if((a===null||b===null)&&inWin.length>=4){const s=inWin.slice().sort((x,y)=>x.ts.localeCompare(y.ts));const h=Math.floor(s.length/2);a=mean(s.slice(0,h).map(l=>l.apoyo));b=mean(s.slice(h).map(l=>l.apoyo))}
+  /* v3.1: pendiente de mínimos cuadrados sobre los 14 días. Se declara cambio solo si el cambio estimado
+     es de 0,75 niveles o más y la pendiente es al menos 2 veces su error estándar; con menos de 4 registros: pocos datos.
+     Ajuste derivado de la validación por simulación (la regla de diferencia de medias daba 56 % de falsas alarmas). */
+  let trend=null;
+  if(inWin.length>=4){
+    const pts=inWin.map(l=>[days.indexOf(dayKey(l.ts)),l.apoyo]);
+    const mx=mean(pts.map(p=>p[0])),my=mean(pts.map(p=>p[1]));
+    const sxx=pts.reduce((s,p)=>s+(p[0]-mx)**2,0);
+    if(sxx>0){
+      const slope=pts.reduce((s,p)=>s+(p[0]-mx)*(p[1]-my),0)/sxx;
+      const rss=pts.reduce((s,p)=>s+(p[1]-(my+slope*(p[0]-mx)))**2,0);
+      const se=Math.sqrt(rss/Math.max(pts.length-2,1)/sxx);
+      const tt=se>0?slope/se:(slope>0?Infinity:slope<0?-Infinity:0);
+      const change=slope*13;
+      trend=change>=.75&&tt>=2?'up':change<=-.75&&tt<=-2?'down':'flat';
+    }
+  }
+  const recentAll=obs.slice().sort((x,y)=>y.ts.localeCompare(x.ts)).slice(0,3).map(l=>l.apoyo);
+  return {inWin,a,b,trend,now:mean(recentAll),n:obs.length};
+}
+function spark(inWin,days){
+  const W=150,H=40,px=5,py=6,iw=W-2*px,ih=H-2*py;
+  const X=i=>px+i/(days.length-1)*iw,Y=v=>py+ih-v/4*ih;
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="150" height="40" role="img" aria-label="Nivel de apoyo en 14 días">`;
+  [0,2,4].forEach(v=>s+=`<line x1="${px}" x2="${W-px}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-dasharray="${v===4?'0':'2 3'}"/>`);
+  const daily=days.map((d,i)=>{const v=inWin.filter(l=>dayKey(l.ts)===d).map(l=>l.apoyo);return v.length?[X(i),Y(mean(v))]:null}).filter(Boolean);
+  if(daily.length>1)s+=`<path d="${daily.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ')}" fill="none" stroke="var(--ok)" stroke-width="2" stroke-linejoin="round"/>`;
+  daily.forEach((p,i)=>s+=`<circle cx="${p[0]}" cy="${p[1]}" r="${i===daily.length-1?3.6:2.4}" fill="var(--ok)"/>`);
+  return s+'</svg>';
+}
+const TREND={up:['↑ Necesita menos ayuda','up'],down:['↓ Necesita más ayuda','down'],flat:['→ Sin cambio claro','flat']};
+/* v3.1: una respuesta o estrategia solo se califica con 3 usos o más en los últimos 28 días */
+const MIN_USOS=3;
+function inDays(arr,n){const lim=new Date();lim.setDate(lim.getDate()-(n-1));lim.setHours(0,0,0,0);return arr.filter(e=>new Date(e.ts)>=lim)}
+function effPill(ok,n){if(n<MIN_USOS)return `<span class="pill">${ok} de ${n} · pocos datos</span>`;const p=ok/n;const cls=p>=.7?'ok':p>=.4?'warn':'bad';return `<span class="pill ${cls}">${ok} de ${n} · ${Math.round(p*100)}%</span>`}
+function renderAvances(){
+  const days=lastDays();
+  $('#ladder').innerHTML='Nivel de apoyo: '+APOYO.map(a=>`<span><b>${a.v}</b> ${a.s}</span>`).join('');
+  const act=S.objetivos.filter(o=>!o.archivado);
+  $('#goals').innerHTML=act.length?AREAS.map(ar=>act.filter(o=>o.area===ar.id).map(o=>{
+    const st=goalStats(o.id,days);const tr=st.trend?TREND[st.trend]:null;
+    const nowLbl=st.now===null?'Sin registros':APOYO[Math.round(st.now)].n;
+    return `<div class="goal"><div><div class="gname">${esc(o.texto)}</div><div class="gmeta"><span class="pill" style="color:${ar.c}">${ar.n}</span> ${esc(o.quien)} · ${st.n} registro${st.n===1?'':'s'}</div></div><div class="gspark">${spark(st.inWin,days)}</div><div class="gnow"><b>${nowLbl}</b>${tr?`<span class="trend ${tr[1]}">${tr[0]}</span>`:'<span class="trend flat">Pocos datos</span>'}<div><button class="x" style="font-size:.8rem;padding:0" data-arch="${o.id}">Archivar</button></div></div></div>`}).join('')).join(''):'<p class="note">No hay objetivos activos. Agrega el primero con el formulario de abajo.</p>';
+  const arch=S.objetivos.filter(o=>o.archivado);
+  $('#archived').hidden=!arch.length;
+  $('#archivedList').innerHTML=arch.map(o=>`<div class="plan-item"><label>${esc(o.texto)}</label><button class="btn small" data-rest="${o.id}">Restaurar</button></div>`).join('');
+  $$('[data-arch]').forEach(b=>b.onclick=()=>{byId(S.objetivos,b.dataset.arch).archivado=true;save();fillObjSelect();renderAvances();toast('Objetivo archivado; su historial se conserva')});
+  $$('[data-rest]').forEach(b=>b.onclick=()=>{byId(S.objetivos,b.dataset.rest).archivado=false;save();fillObjSelect();renderAvances()});
+  /* sugeridos */
+  const have=new Set(S.objetivos.map(o=>o.texto));
+  const sg=OBJ_LIB[S.nivel].filter(o=>!have.has(o.t));
+  $('#suggWrap').hidden=!sg.length;
+  $('#sugg').innerHTML=sg.map((o,i)=>`<button type="button" data-sg="${i}"><b>+</b>${esc(o.t)}</button>`).join('');
+  $$('[data-sg]').forEach(b=>b.onclick=()=>{const o=sg[+b.dataset.sg];addGoal(o.t,o.a,o.q)});
+  /* diccionario */
+  const lim=new Date();lim.setDate(lim.getDate()-13);lim.setHours(0,0,0,0);
+  const W=S.palabras.slice().sort((a,b)=>b.ts.localeCompare(a.ts));
+  const nuevas=W.filter(w=>new Date(w.ts)>=lim).length;
+  $('#dictTable').innerHTML=W.length?`<thead><tr><th>Lo que dice o hace</th><th>Qué significa</th><th>Desde</th><th></th></tr></thead><tbody>${W.map(w=>`<tr><td>${esc(w.forma)}<span class="tipo">${byId(TIPOS,w.tipo).n}</span></td><td>${esc(w.significa)}</td><td style="white-space:nowrap">${fmtShort(w.ts)}${new Date(w.ts)>=lim?' <span class="pill star">nueva</span>':''}</td><td><button class="x" aria-label="Quitar" data-wdel="${w.id}">×</button></td></tr>`).join('')}</tbody><caption style="caption-side:bottom;text-align:left;padding-top:8px" class="note">${W.length} en total · ${nuevas} nuevas en los últimos 14 días</caption>`:'<tbody><tr><td class="note">Todavía no hay palabras ni señas. Agrega la primera: por ejemplo, el sonido que usa para pedir agua.</td></tr></tbody>';
+  $$('[data-wdel]').forEach(b=>b.onclick=()=>{S.palabras=S.palabras.filter(w=>w.id!==b.dataset.wdel);save();renderAvances()});
+  /* formas de comunicación */
+  const LW=S.logros.filter(l=>days.includes(dayKey(l.ts)));
+  const fc=FORMAS.map(f=>{const a=LW.filter(l=>days.indexOf(dayKey(l.ts))<7&&(l.formas||[]).includes(f.id)).length,b=LW.filter(l=>days.indexOf(dayKey(l.ts))>=7&&(l.formas||[]).includes(f.id)).length;return {f,a,b}});
+  const anyF=fc.some(x=>x.a||x.b);
+  $('#formaTable').innerHTML=anyF?`<thead><tr><th>Forma</th><th class="n">Semana 1</th><th class="n">Semana 2</th></tr></thead><tbody>${fc.map(x=>`<tr><td>${x.f.n}</td><td class="n">${x.a}</td><td class="n">${x.b>x.a?`<span class="up">${x.b} ↑</span>`:x.b}</td></tr>`).join('')}</tbody>`:'<tbody><tr><td class="note">Marca cómo se comunicó al registrar un avance y aquí verás si aparecen formas nuevas.</td></tr></tbody>';
+  /* hitos */
+  const H=hitosSet();
+  const items=S.logros.filter(l=>H.has(l.id)||l.frase||l.objetivo==='otro').sort((a,b)=>b.ts.localeCompare(a.ts)).slice(0,6);
+  $('#hitos').innerHTML=items.length?items.map(l=>{
+    const first=H.has(l.id);
+    return `<div class="hito"><div class="ic ${first?'':'q'}" aria-hidden="true">${first?'★':'“'}</div><div style="min-width:0"><div class="meta note">${fmtShort(l.ts)} · ${esc(objName(l.objetivo))}</div>${first?'<div><b>Lo hizo por primera vez sin ayuda.</b></div>':''}${l.frase?`<p class="quote">«${esc(l.frase)}»</p>`:''}${l.nota&&!l.frase?`<div>${esc(l.nota)}</div>`:''}</div></div>`}).join(''):'<p class="note">Aquí aparecerán las primeras veces que logre algo sin ayuda y las frases que registres.</p>';
+}
+
+/* patrones */
+function barsHTML(rows,max,stack){
+  return rows.map(r=>`<div class="bar"><span>${esc(r.n)}</span><div class="track" role="img" aria-label="${esc(r.n)}: ${r.t}">${stack?r.parts.map(p=>`<i style="width:${p.v/max*100}%;background:${p.c}"></i>`).join(''):`<i style="width:${r.t/max*100}%;background:${r.c||'var(--accent)'}"></i>`}</div><span class="num">${r.t}</span></div>`).join('');
+}
+const empty='<p class="note">Sin registros aún.</p>';
+function renderPatterns(){
+  const E=inRange(S.entries),C=inRange(S.conductas),L=inRange(S.logros);const days=lastDays();
+  const ck=S.checkins.filter(c=>days.includes(c.fecha));const avgS=mean(ck.map(c=>c.estres));
+  const act=S.objetivos.filter(o=>!o.archivado);const gs=act.map(o=>({o,st:goalStats(o.id,days)}));
+  const ups=gs.filter(g=>g.st.trend==='up').length;
+  $('#kpis').innerHTML=[
+    [E.length,'episodios sensoriales'],
+    [C.length,'conductas registradas'],
+    [L.length,'avances registrados'],
+    [ups+' de '+act.length,'objetivos con menos ayuda'],
+    [avgS===null?'—':avgS.toFixed(1),'estrés promedio del cuidador']
+  ].map(k=>`<div class="kpi"><div class="v">${k[0]}</div><div class="k">${k[1]}</div></div>`).join('');
+  /* tendencia */
+  const W=600,Hh=180,pl=26,pr=26,pt=10,pb=26,iw=W-pl-pr,ih=Hh-pt-pb;
+  const ce=days.map(d=>E.filter(e=>dayKey(e.ts)===d).length),cc=days.map(d=>C.filter(e=>dayKey(e.ts)===d).length);
+  const cm=Math.max(4,...days.map((d,i)=>ce[i]+cc[i]));const step=Math.ceil(cm/4);const top=step*4;const bw=iw/days.length;
+  let svg=`<svg viewBox="0 0 ${W} ${Hh}" width="100%" role="img" aria-label="Episodios y conductas por día con estrés del cuidador">`;
+  for(let g=0;g<=top;g+=step){const y=pt+ih-g/top*ih;svg+=`<line x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${pl-6}" y="${y+4}" text-anchor="end">${g}</text>`}
+  [0,5,10].forEach(v=>{const y=pt+ih-v/10*ih;svg+=`<text x="${W-pr+6}" y="${y+4}">${v}</text>`});
+  days.forEach((d,i)=>{const x=pl+i*bw+bw*.2,w=bw*.6;const h1=ce[i]/top*ih,h2=cc[i]/top*ih;
+    if(h1)svg+=`<rect x="${x}" y="${pt+ih-h1}" width="${w}" height="${h1}" fill="var(--aud)" opacity=".75"/>`;
+    if(h2)svg+=`<rect x="${x}" y="${pt+ih-h1-h2}" width="${w}" height="${h2}" fill="var(--warn)" opacity=".85"/>`});
+  const pts=days.map((d,i)=>{const v=mean(S.checkins.filter(x=>x.fecha===d).map(x=>x.estres));return v!==null?[pl+i*bw+bw/2,pt+ih-v/10*ih]:null});
+  const path=pts.filter(Boolean).map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  if(path)svg+=`<path d="${path}" fill="none" stroke="var(--bad)" stroke-width="2.2" stroke-linejoin="round"/>`;
+  pts.forEach((p,i)=>{if(p)svg+=`<circle cx="${p[0]}" cy="${p[1]}" r="${i===pts.length-1?4:2.6}" fill="var(--bad)"/>`});
+  [0,7,13].forEach(i=>svg+=`<text x="${pl+i*bw+bw/2}" y="${Hh-8}" text-anchor="middle">${fmtShort(days[i]+'T12:00')}</text>`);
+  $('#trend').innerHTML=svg+'</svg>';
+  /* sensorial */
+  const sysRows=SISTEMAS.map(s=>({n:s.n,t:E.filter(e=>e.sistema===s.id).length,parts:RESP.map(r=>({v:E.filter(e=>e.sistema===s.id&&e.respuesta===r.id).length,c:r.c}))})).filter(r=>r.t).sort((a,b)=>b.t-a.t);
+  $('#bySystem').innerHTML=sysRows.length?barsHTML(sysRows,Math.max(...sysRows.map(r=>r.t)),true):empty;
+  $('#respLegend').innerHTML=RESP.map(r=>`<span><b style="background:${r.c}"></b>${r.n}</span>`).join('');
+  const ctxRows=CONTEXTOS.map(c=>({n:c.n,t:E.filter(e=>e.contexto===c.id).length,c:'var(--aud)'})).filter(r=>r.t).sort((a,b)=>b.t-a.t);
+  $('#byContext').innerHTML=ctxRows.length?barsHTML(ctxRows,Math.max(...ctxRows.map(r=>r.t)),false):empty;
+  /* conductas */
+  const anteRows=ANTE.map(a=>({n:a.n,t:C.filter(c=>c.antecedente===a.id).length,c:'var(--warn)'})).filter(r=>r.t).sort((a,b)=>b.t-a.t).slice(0,6);
+  $('#byAnte').innerHTML=anteRows.length?barsHTML(anteRows,anteRows[0].t,false):empty;
+  const condRows=CONDUCTA.map(a=>({n:a.n,t:C.filter(c=>c.conducta===a.id).length,c:'var(--ink)'})).filter(r=>r.t).sort((a,b)=>b.t-a.t).slice(0,6);
+  $('#byCond').innerHTML=condRows.length?barsHTML(condRows,condRows[0].t,false):empty;
+  const pc={};C.forEach(c=>{const k=c.antecedente+'|'+c.conducta;pc[k]=(pc[k]||0)+1});
+  const topPairs=Object.entries(pc).sort((a,b)=>b[1]-a[1]).slice(0,2).filter(p=>p[1]>1);
+  $('#pairs').textContent=topPairs.length?'Combinación más repetida: '+topPairs.map(([k,v])=>{const [a,b]=k.split('|');return `«${byId(ANTE,a).n.toLowerCase()}» → «${byId(CONDUCTA,b).n.toLowerCase()}» (${v} veces)`}).join('; ')+'.':'';
+  const C28=inDays(S.conductas,28),E28=inDays(S.entries,28);
+  const rank=(a,b)=>((b.n>=MIN_USOS)-(a.n>=MIN_USOS))||(b.ok/b.n)-(a.ok/a.n)||b.n-a.n;
+  const consRows=CONSEC.map(c=>{const u=C28.filter(x=>x.consecuencia===c.id);return {c,n:u.length,ok:u.filter(x=>x.desenlace===2).length,bad:u.filter(x=>x.desenlace===0).length}}).filter(x=>x.n).sort(rank);
+  $('#consTable').innerHTML=consRows.length?`<thead><tr><th>Qué hicimos (28 días)</th><th class="n">Se calmó rápido</th></tr></thead><tbody>${consRows.map(x=>`<tr><td>${x.c.n}</td><td class="n">${effPill(x.ok,x.n)}</td></tr>`).join('')}</tbody>`:'<tbody><tr><td class="note">Sin datos suficientes.</td></tr></tbody>';
+  const st=ESTR.map(s=>{const u=E28.filter(e=>e.estrategia===s.id);return {s,n:u.length,ok:u.filter(e=>e.efectividad===2).length}}).filter(x=>x.n).sort(rank);
+  $('#stratTable').innerHTML=st.length?`<thead><tr><th>Estrategia (28 días)</th><th class="n">Ayudó</th></tr></thead><tbody>${st.map(x=>`<tr><td>${esc(x.s.n)}</td><td class="n">${effPill(x.ok,x.n)}</td></tr>`).join('')}</tbody>`:'<tbody><tr><td class="note">Sin datos suficientes.</td></tr></tbody>';
+  const frRows=FRANJAS.map(f=>{const a=E.filter(e=>franjaOf(e.ts)===f.id).length,b=C.filter(e=>franjaOf(e.ts)===f.id).length;return {n:f.n,t:a+b,parts:[{v:a,c:'var(--aud)'},{v:b,c:'var(--warn)'}]}});
+  $('#byFranja').innerHTML=barsHTML(frRows,Math.max(1,...frRows.map(r=>r.t)),true);
+  /* reporte */
+  const perfil=$('#kidPerfil').selectedOptions[0].textContent;
+  const avgI=mean(E.map(e=>e.intensidad));
+  const sysTxt=sysRows.map(r=>{const p=r.parts.map((x,i)=>x.v?RESP[i].n.toLowerCase()+' '+x.v:'').filter(Boolean).join(', ');return `  • ${r.n}: ${r.t} (${p})`}).join('\n')||'  —';
+  const best=st.filter(x=>x.n>=MIN_USOS&&x.ok/x.n>=.7).map(x=>x.s.n).join(', ')||'ninguna con datos suficientes';
+  const goalTxt=gs.map(({o,st})=>{const tr=st.trend?TREND[st.trend][0].replace(/^[↑↓→] /,'').toLowerCase():'pocos datos';const ch=st.a!==null&&st.b!==null?` (${st.a.toFixed(1)} → ${st.b.toFixed(1)})`:'';return `  • ${o.texto} [${o.quien}]: ${st.now===null?'sin registros':APOYO[Math.round(st.now)].n.toLowerCase()}; ${tr}${ch}`}).join('\n')||'  —';
+  const frases=S.logros.filter(l=>l.frase).sort((a,b)=>b.ts.localeCompare(a.ts)).slice(0,5).map(l=>`  • ${fmtShort(l.ts)}: «${l.frase}»`).join('\n')||'  —';
+  const H=hitosSet();const hit=S.logros.filter(l=>H.has(l.id)).map(l=>`  • ${fmtShort(l.ts)}: ${objName(l.objetivo)}`).join('\n')||'  —';
+  const consBest=consRows.filter(x=>x.n>=MIN_USOS&&x.ok/x.n>=.7).map(x=>x.c.n.toLowerCase()).join(', ')||'ninguna con datos suficientes';
+  const consWorst=consRows.filter(x=>x.n>=MIN_USOS&&x.bad/x.n>=.5).map(x=>x.c.n.toLowerCase()).join(', ')||'ninguna con datos suficientes';
+  const riesgo=C.filter(c=>RIESGO.includes(c.conducta)&&c.intensidad>=4).length;
+  const notas=[...E,...C].filter(e=>e.nota).sort((a,b)=>b.ts.localeCompare(a.ts)).slice(0,3).map(e=>`  • ${fmtShort(e.ts)}: ${e.nota}`).join('\n')||'  —';
+  const anyEx=[...E,...C,...L].some(e=>e.ejemplo);
+  const formasTxt=FORMAS.map(f=>{const a=L.filter(l=>days.indexOf(dayKey(l.ts))<7&&(l.formas||[]).includes(f.id)).length,b=L.filter(l=>days.indexOf(dayKey(l.ts))>=7&&(l.formas||[]).includes(f.id)).length;return a||b?`  • ${f.n}: ${a} → ${b}`:''}).filter(Boolean).join('\n')||'  —';
+  const lim=new Date(days[0]+'T00:00');
+  const nuevasW=S.palabras.filter(w=>new Date(w.ts)>=lim);
+  const dictTxt=S.palabras.slice().sort((a,b)=>a.ts.localeCompare(b.ts)).map(w=>`  • ${w.forma} = ${w.significa}${new Date(w.ts)>=lim?' (nueva)':''}`).join('\n')||'  —';
+  $('#report').textContent=`BITÁCORA SENSORIAL · Resumen de 14 días
+Niño/a: ${S.nombre||'sin nombre'}${S.edad?' · '+S.edad:''} · Perfil: ${perfil}
+Lenguaje: ${NIVELES[S.nivel]}
+Periodo: ${fmtShort(days[0]+'T12:00')} a ${fmtShort(days[13]+'T12:00')}${anyEx?'\n(Incluye datos de ejemplo)':''}
+
+1. AVANCES POR OBJETIVO (apoyo 0 = no lo logró … 4 = sin ayuda; promedio semana 1 → semana 2)
+${goalTxt}
+
+Primeras veces sin ayuda:
+${hit}
+
+Lo que dijo o cómo sonó:
+${frases}
+
+Formas de comunicación (semana 1 → semana 2):
+${formasTxt}
+
+Sus palabras y señas (${S.palabras.length} en total, ${nuevasW.length} nuevas en 14 días):
+${dictTxt}
+
+2. CONDUCTAS (${C.length} registros)
+Desencadenantes más frecuentes: ${anteRows.slice(0,3).map(r=>r.n.toLowerCase()+' ('+r.t+')').join(', ')||'—'}${C.length&&C.length<20?'\n(Con menos de 20 conductas registradas, el desencadenante principal todavía puede cambiar.)':''}
+Conductas más frecuentes: ${condRows.slice(0,3).map(r=>r.n.toLowerCase()+' ('+r.t+')').join(', ')||'—'}
+Respuestas que ayudan a calmarse (3 usos o más y 70 % o más en 28 días): ${consBest}
+Respuestas asociadas a empeorar: ${consWorst}
+Conductas de riesgo de intensidad alta: ${riesgo}
+
+3. PROCESAMIENTO SENSORIAL (${E.length} episodios · intensidad promedio ${avgI===null?'—':avgI.toFixed(1)}/5)
+${sysTxt}
+Lugares más frecuentes: ${ctxRows.slice(0,3).map(r=>r.n+' ('+r.t+')').join(', ')||'—'}
+Estrategias sensoriales que suelen ayudar: ${best}
+
+4. FAMILIA
+Estrés del cuidador: ${avgS===null?'sin check-ins':avgS.toFixed(1)+'/10 en promedio ('+ck.length+' registros)'}${(()=>{const qs=[...new Set(ck.map(c=>c.por||''))];return qs.length>1?'\n'+qs.map(q=>`  • ${q||'Sin nombre'}: ${mean(ck.filter(c=>(c.por||'')===q).map(c=>c.estres)).toFixed(1)}/10`).join('\n'):''})()}${(()=>{const all=[...E,...C,...L];const qs=[...new Set(all.map(x=>x.por||''))];return qs.length>1?'\nRegistros por cuidador: '+qs.map(q=>`${q||'sin nombre'} (${all.filter(x=>(x.por||'')===q).length})`).join(', '):''})()}
+
+Notas recientes:
+${notas}
+
+Registro elaborado por la familia. No constituye diagnóstico.`;
+}
+$('#copyReport').onclick=()=>{const t=$('#report').textContent;
+  const fallback=()=>{const r=document.createRange();r.selectNodeContents($('#report'));const s=getSelection();s.removeAllRanges();s.addRange(r);toast('Texto seleccionado: cópialo con Ctrl+C')};
+  try{navigator.clipboard.writeText(t).then(()=>toast('Resumen copiado'),fallback)}catch(e){fallback()}};
+
+let showAllStrat=false;
+const fits=s=>!s.lv||s.lv.includes(S.nivel);
+function renderStrats(){
+  const hiddenN=ESTR.filter(s=>!fits(s)).length;
+  $('#stratNote').innerHTML=`<span>Mostrando estrategias para ${S.edad?'un niño de '+esc(S.edad)+' que ':'un niño que '}<b>${NIVELES[S.nivel]}</b>.${hiddenN&&!showAllStrat?` Ocultamos ${hiddenN} que necesitan más lenguaje.`:''} Cambia el nivel en el perfil de arriba.</span>${hiddenN?`<button class="btn small" id="toggleAll">${showAllStrat?'Solo las de su nivel':'Ver todas'}</button>`:''}`;
+  const tg=$('#toggleAll');if(tg)tg.onclick=()=>{showAllStrat=!showAllStrat;renderStrats()};
+  $('#stratFilters').innerHTML=SFILT.map(r=>`<label class="chip" style="--c:${r.c||'var(--ink)'}" title="${esc(r.d||'')}"><input type="radio" name="sf" value="${r.id}" ${stratFilter===r.id?'checked':''}><span>${r.c?'<i class="dot"></i>':''}${r.n}</span></label>`).join('');
+  $$('input[name=sf]').forEach(i=>i.onchange=()=>{stratFilter=i.value;renderStrats()});
+  const rf=byId(RESP,stratFilter);
+  const desc=rf?`<p class="note" style="margin:0 0 6px">${esc(rf.d)}.</p>`:'';
+  const lst=ESTR.filter(s=>(showAllStrat||fits(s))&&(stratFilter==='all'||s.r.includes(stratFilter)||s.g===stratFilter))
+    .sort((a,b)=>(+!!(b.lv&&b.lv[0]==='emerg'&&S.nivel==='emerg'))-(+!!(a.lv&&a.lv[0]==='emerg'&&S.nivel==='emerg')));
+  const useD2=S.nivel==='emerg';
+  $('#stratList').innerHTML=desc+lst.map(s=>`<div class="strat"><h4>${esc(s.n)}${useD2&&s.d2?'<span class="adapt">adaptada a su nivel</span>':''}${!fits(s)?'<span class="adapt" style="color:var(--muted)">requiere más lenguaje</span>':''}</h4><p>${esc(useD2&&s.d2?s.d2:s.d)}</p><div style="margin-top:6px">${(s.s||[]).map(id=>{const x=byId(SISTEMAS,id);return `<span class="pill" style="color:${x.c}">${x.n}</span>`}).join('')}${s.g==='com'?'<span class="pill" style="color:var(--aud)">Comunicación</span>':''}${s.g==='cond'?'<span class="pill" style="color:var(--ves)">Conducta</span>':''}</div></div>`).join('');
+}
+
+function renderPlan(){
+  const t=dayKey(new Date());
+  const doneN=S.plan.filter(p=>p.done[t]).length;
+  $('#planList').innerHTML=`<p class="note" style="margin:0 0 6px">${doneN} de ${S.plan.length} actividades hechas hoy.</p>`+FRANJAS.map(f=>{
+    const items=S.plan.filter(p=>p.franja===f.id);if(!items.length)return '';
+    return `<div class="plan-slot"><h3>${f.n}</h3>${items.map(p=>`<div class="plan-item ${p.done[t]?'done':''}"><input type="checkbox" id="pl-${p.id}" data-p="${p.id}" ${p.done[t]?'checked':''}><label for="pl-${p.id}">${esc(p.actividad)}</label><button class="x" aria-label="Quitar actividad" data-pdel="${p.id}">×</button></div>`).join('')}</div>`}).join('');
+  $$('[data-p]').forEach(c=>c.onchange=()=>{const p=byId(S.plan,c.dataset.p);if(c.checked)p.done[t]=true;else delete p.done[t];save();renderPlan()});
+  $$('[data-pdel]').forEach(b=>b.onclick=()=>{S.plan=S.plan.filter(p=>p.id!==b.dataset.pdel);save();renderPlan()});
+}
+
+function renderFamily(){
+  /* v3.3: el estrés es de cada cuidador; se muestra el de quien está registrando */
+  const quien=por();
+  const mine=S.checkins.filter(c=>(c.por||'')===quien);
+  const last7=mine.slice().sort((a,b)=>a.fecha.localeCompare(b.fecha)).slice(-7);
+  const avg=mean(last7.map(c=>c.estres));
+  const high=last7.filter(c=>c.estres>=7).length;
+  let msg;
+  if(avg===null)msg='Aún no hay check-ins. Guarda el primero arriba.';
+  else if(high>=3)msg=`Esta semana tuviste ${high} días con estrés de 7 o más. Es una señal para pedir apoyo: comentarlo en la próxima cita, repartir tareas con otro adulto o buscar un grupo de familias. Tu bienestar también es parte del tratamiento.`;
+  else if(avg>=5)msg='Tu estrés está en un nivel medio. Busca un momento corto del día solo para ti y comparte el plan del día con otra persona de la casa.';
+  else msg='Tu estrés se ha mantenido bajo esta semana. Anota qué ha ayudado, para recordarlo en días difíciles.';
+  $('#stressAdvice').innerHTML=`<h3>Últimos 7 días${quien?' de '+esc(quien):''}</h3>${quien?'':'<p class="hint" style="margin:-4px 0 10px">Escribe arriba quién registra («Registra») para llevar el estrés de cada cuidador por separado.</p>'}<div class="kpis" style="margin-bottom:12px"><div class="kpi"><div class="v">${avg===null?'—':avg.toFixed(1)}</div><div class="k">estrés promedio</div></div><div class="kpi"><div class="v">${high}</div><div class="k">días con 7 o más</div></div></div><p style="margin:0;max-width:65ch">${msg}</p>`;
+}
+
+/* ── v3.2: respaldo y exportación ── */
+const VERSION='3.3';
+const pad=n=>String(n).padStart(2,'0');
+const fFecha=ts=>{const d=new Date(ts);return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`};
+const fHora=ts=>{const d=new Date(ts);return `${pad(d.getHours())}:${pad(d.getMinutes())}`};
+const lbl=(arr,id)=>{const x=byId(arr,id);return x?x.n:(id??'')};
+const SINO={si:'Sí',poco:'Un poco',no:'No'},SUENO={bien:'Bien',regular:'Regular',mal:'Mal'};
+function slug(s){return (s||'nino').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-|-$/g,'').toLowerCase()||'nino'}
+function baseName(){return `bitacora-${slug(S.nombre)}${por()?'-'+slug(por()):''}-${fFecha(new Date())}`}
+function exportSheets(){
+  const H=hitosSet(),days=lastDays(),ej=e=>e.ejemplo?'Sí':'';
+  const byTs=(a,b)=>a.ts.localeCompare(b.ts);
+  return {
+    'Datos del niño':[
+      {Campo:'Nombre o alias',Valor:S.nombre||''},{Campo:'Edad',Valor:S.edad||''},
+      {Campo:'Perfil',Valor:$('#kidPerfil').selectedOptions[0].textContent},{Campo:'Habla',Valor:$('#kidNivel').selectedOptions[0].textContent},
+      {Campo:'Exportado por',Valor:por()},{Campo:'Cuidadores con registros',Valor:[...new Set(['entries','conductas','logros','checkins'].flatMap(k=>S[k].map(x=>x.por).filter(Boolean)))].join(', ')},{Campo:'Exportado',Valor:new Date().toLocaleString('es-CO')},{Campo:'Versión de la app',Valor:VERSION}],
+    'Sensorial':S.entries.slice().sort(byTs).map(e=>({Fecha:fFecha(e.ts),Hora:fHora(e.ts),Registró:e.por||'',Lugar:lbl(CONTEXTOS,e.contexto),Sistema:lbl(SISTEMAS,e.sistema),Respuesta:lbl(RESP,e.respuesta),'Intensidad (1-5)':e.intensidad,'Duración (min)':e.duracion,'Qué hicimos':e.estrategia==='otra'?'Otra / ninguna':lbl(ESTR,e.estrategia),'¿Ayudó?':lbl(EFE,e.efectividad),Detalle:e.nota||'',Ejemplo:ej(e)})),
+    'Conductas':S.conductas.slice().sort(byTs).map(c=>({Fecha:fFecha(c.ts),Hora:fHora(c.ts),Registró:c.por||'',Lugar:lbl(CONTEXTOS,c.contexto),'A · Qué pasó antes':lbl(ANTE,c.antecedente),'B · Qué hizo':lbl(CONDUCTA,c.conducta),'Intensidad (1-5)':c.intensidad,'Duración (min)':c.duracion,'C · Qué hicimos':lbl(CONSEC,c.consecuencia),'Cómo terminó':lbl(DESENLACE,c.desenlace),'Riesgo alto':RIESGO.includes(c.conducta)&&c.intensidad>=4?'Sí':'',Detalle:c.nota||'',Ejemplo:ej(c)})),
+    'Avances':S.logros.slice().sort(byTs).map(l=>{const o=byId(S.objetivos,l.objetivo);return {Fecha:fFecha(l.ts),Hora:fHora(l.ts),Registró:l.por||'',Objetivo:objName(l.objetivo),Área:o?lbl(AREAS,o.area):'','Apoyo (0-4)':l.apoyo,'Nivel de apoyo':APOYO[l.apoyo]?APOYO[l.apoyo].n:'','Cómo se comunicó':(l.formas||[]).map(f=>lbl(FORMAS,f)).join(', '),'Lo que dijo':l.frase||'',Lugar:lbl(LUGARES,l.lugar),'Primera vez sin ayuda':H.has(l.id)?'Sí':'',Detalle:l.nota||'',Ejemplo:ej(l)}}),
+    'Objetivos':S.objetivos.map(o=>{const st=goalStats(o.id,days);return {Objetivo:o.texto,Área:lbl(AREAS,o.area),'Lo propuso':o.quien,Estado:o.archivado?'Archivado':'Activo',Registros:st.n,'Nivel actual':st.now===null?'':APOYO[Math.round(st.now)].n,'Tendencia 14 días':st.trend?TREND[st.trend][0].replace(/^[↑↓→] /,''):'Pocos datos'}}),
+    'Palabras y señas':S.palabras.slice().sort(byTs).map(w=>({'Lo que dice o hace':w.forma,Tipo:lbl(TIPOS,w.tipo),Significa:w.significa,Desde:fFecha(w.ts),Registró:w.por||'',Ejemplo:ej(w)})),
+    'Bienestar':S.checkins.slice().sort((a,b)=>a.fecha.localeCompare(b.fecha)).map(c=>({Fecha:c.fecha,Cuidador:c.por||'','Estrés (0-10)':c.estres,Sueño:SUENO[c.sueno]||c.sueno||'','¿Tuvo apoyo?':SINO[c.apoyo]||c.apoyo||'',Ejemplo:ej(c)})),
+    'Plan del día':S.plan.map(p=>({Momento:lbl(FRANJAS,p.franja),Actividad:p.actividad,'Días realizada':Object.keys(p.done||{}).length,'Fechas':Object.keys(p.done||{}).sort().join(', ')})),
+    'Resumen 14 días':(renderPatterns(),$('#report').textContent).split('\n').map(t=>({Resumen:t}))
+  };
+}
+function csvAll(){
+  const sh=exportSheets(),rows=[];
+  const add=(tipo,r,f)=>rows.push({Tipo:tipo,Fecha:r.Fecha||'',Hora:r.Hora||'',Registró:r.Registró??r.Cuidador??'',...f});
+  sh['Sensorial'].forEach(r=>add('Episodio sensorial',r,{Lugar:r.Lugar,Qué:`${r.Sistema} · ${r.Respuesta}`,Intensidad:r['Intensidad (1-5)'],'Duración (min)':r['Duración (min)'],Respuesta:r['Qué hicimos'],Resultado:r['¿Ayudó?'],Detalle:r.Detalle}));
+  sh['Conductas'].forEach(r=>add('Conducta',r,{Lugar:r.Lugar,Qué:`${r['A · Qué pasó antes']} → ${r['B · Qué hizo']}`,Intensidad:r['Intensidad (1-5)'],'Duración (min)':r['Duración (min)'],Respuesta:r['C · Qué hicimos'],Resultado:r['Cómo terminó'],Detalle:r.Detalle}));
+  sh['Avances'].forEach(r=>add('Avance',r,{Lugar:r.Lugar,Qué:r.Objetivo,Intensidad:'','Duración (min)':'',Respuesta:r['Cómo se comunicó'],Resultado:`${r['Apoyo (0-4)']} · ${r['Nivel de apoyo']}`,Detalle:[r['Lo que dijo']?`«${r['Lo que dijo']}»`:'',r.Detalle].filter(Boolean).join(' ')}));
+  sh['Bienestar'].forEach(r=>add('Estrés del cuidador',r,{Lugar:'',Qué:'Estrés (0-10)',Intensidad:r['Estrés (0-10)'],'Duración (min)':'',Respuesta:'',Resultado:`Sueño: ${r.Sueño}; apoyo: ${r['¿Tuvo apoyo?']}`,Detalle:''}));
+  rows.sort((a,b)=>(a.Fecha+a.Hora).localeCompare(b.Fecha+b.Hora));
+  const cols=['Tipo','Fecha','Hora','Registró','Lugar','Qué','Intensidad','Duración (min)','Respuesta','Resultado','Detalle'];
+  const q=v=>{v=String(v??'');return /[;"\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+  return '﻿'+[cols.join(';'),...rows.map(r=>cols.map(c=>q(r[c])).join(';'))].join('\r\n');
+}
+let dlCap;
+async function offerFile(filename,data,textForFallback){
+  const st=$('#expStatus');st.textContent='Preparando el archivo…';$('#expFallback').hidden=true;
+  if(dlCap===undefined){try{dlCap=window.claude&&window.claude.use?await window.claude.use('downloads'):null}catch(e){dlCap=null}}
+  if(dlCap){
+    try{await dlCap.save({filename,data});st.textContent=`Listo: ${filename}`;return}
+    catch(e){if(e&&e.code==='declined'){st.textContent='Descarga cancelada.';return}
+      if(e&&e.code==='rate_limited'){st.textContent='Ya hay una descarga esperando confirmación.';return}}
+  }
+  if(!(window.claude&&window.claude.use)){
+    try{const blob=data instanceof Blob?data:new Blob([data]);const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);st.textContent=`Listo: ${filename}`;return}catch(e){}
+  }
+  if(textForFallback){const ta=$('#expFallback');ta.value=textForFallback;ta.hidden=false;ta.focus();ta.select();st.textContent=`Este navegador no permitió la descarga. Copia el texto de abajo y guárdalo como ${filename.replace(/\.xlsx$/,'.csv')}.`}
+  else st.textContent='Este navegador no permitió la descarga. Usa la opción CSV o copia de seguridad.';
+}
+$('#expXlsx').onclick=async()=>{
+  if(!window.XLSX){$('#expStatus').textContent='La librería de Excel no cargó (¿sin conexión?). Se descarga el CSV, que también abre en Excel.';return offerFile(baseName()+'.csv',csvAll(),csvAll())}
+  const sh=exportSheets(),wb=XLSX.utils.book_new();
+  for(const [name,rows] of Object.entries(sh)){
+    const ws=rows.length?XLSX.utils.json_to_sheet(rows):XLSX.utils.aoa_to_sheet([['Sin registros']]);
+    const keys=rows.length?Object.keys(rows[0]):['x'];
+    ws['!cols']=keys.map(k=>({wch:Math.min(60,Math.max(k.length,...rows.map(r=>String(r[k]??'').length))+2)}));
+    XLSX.utils.book_append_sheet(wb,ws,name.slice(0,31));
+  }
+  const buf=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+  offerFile(baseName()+'.xlsx',new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),csvAll());
+};
+$('#expCsv').onclick=()=>{const c=csvAll();offerFile(baseName()+'.csv',c,c)};
+function copyJson(){S.ultimaCopia=new Date().toISOString();save();updateBanners();return JSON.stringify({app:'bitacora-sensorial',version:VERSION,exportado:S.ultimaCopia,por:por(),datos:S},null,1)}
+$('#expJson').onclick=()=>{const j=copyJson();offerFile(baseName()+'-copia.json',j,j)};
+/* v3.3: en el celular, enviar la copia por WhatsApp o correo con el menú de compartir */
+(function(){const b=$('#expShare');if(!b)return;let can=false;try{can=!!(navigator.canShare&&navigator.canShare({files:[new File(['{}'],'x.json',{type:'application/json'})]}))}catch(e){}
+  b.hidden=!can;b.onclick=async()=>{const name=baseName()+'-copia.json';const f=new File([copyJson()],name,{type:'application/json'});
+    try{await navigator.share({files:[f],title:'Copia de la Bitácora Sensorial',text:`Copia de ${S.nombre||'la Bitácora'}${por()?' registrada por '+por():''}`});$('#expStatus').textContent='Copia enviada.'}
+    catch(e){if(e&&e.name!=='AbortError')$('#expStatus').textContent='No se pudo compartir; usa «Descargar copia».'}}})();
+/* v3.3: unión de copias de varios cuidadores
+   - registros por id; nunca revive lo que alguien borró (lista «borrados»)
+   - objetivos, palabras y plan se reconocen también por su texto, para no duplicarlos
+   - el estrés se une por fecha y cuidador */
+const norm=t=>String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+function mergeState(inc){
+  const res={nuevos:0,porQuien:{},omitidos:0};
+  const dead=new Set([...(S.borrados||[]),...(Array.isArray(inc.borrados)?inc.borrados:[])]);
+  S.borrados=[...dead];
+  res.quitados=0;
+  ['entries','conductas','logros','palabras','plan','objetivos'].forEach(k=>{const n=S[k].length;S[k]=S[k].filter(x=>!dead.has(x.id));if(k!=='plan'&&k!=='objetivos')res.quitados+=n-S[k].length});
+  /* objetivos: mismo id o mismo texto = mismo objetivo; se reasignan los avances que apuntan al repetido */
+  const remap={};
+  (inc.objetivos||[]).forEach(o=>{
+    if(!o||!o.id||dead.has(o.id))return;
+    const same=S.objetivos.find(x=>x.id===o.id)||S.objetivos.find(x=>norm(x.texto)===norm(o.texto));
+    if(same){if(same.id!==o.id)remap[o.id]=same.id}else S.objetivos.push(o);
+  });
+  const count=(x)=>{res.nuevos++;const q=x.por||'sin nombre';res.porQuien[q]=(res.porQuien[q]||0)+1};
+  ['entries','conductas','logros'].forEach(k=>{
+    const have=new Set(S[k].map(x=>x.id));
+    (inc[k]||[]).forEach(x=>{
+      if(!x||!x.id)return;if(dead.has(x.id)){res.omitidos++;return}if(have.has(x.id))return;
+      if(k==='logros'&&remap[x.objetivo])x={...x,objetivo:remap[x.objetivo]};
+      S[k].push(x);have.add(x.id);count(x);
+    });
+  });
+  (inc.palabras||[]).forEach(w=>{
+    if(!w||!w.id||dead.has(w.id))return;
+    if(S.palabras.some(x=>x.id===w.id||(norm(x.forma)===norm(w.forma)&&norm(x.significa)===norm(w.significa))))return;
+    S.palabras.push(w);count(w);
+  });
+  (inc.plan||[]).forEach(p=>{
+    if(!p||!p.id||dead.has(p.id))return;
+    const same=S.plan.find(x=>x.id===p.id)||S.plan.find(x=>x.franja===p.franja&&norm(x.actividad)===norm(p.actividad));
+    if(same){same.done=Object.assign({},p.done||{},same.done||{})}else S.plan.push(p);
+  });
+  const key=c=>c.fecha+'|'+(c.por||'');
+  const haveC=new Set(S.checkins.map(key));
+  (inc.checkins||[]).forEach(c=>{if(c&&c.fecha&&!haveC.has(key(c))){S.checkins.push(c);haveC.add(key(c));count(c)}});
+  (inc.cuidadores||[]).forEach(n=>{if(n&&!S.cuidadores.includes(n))S.cuidadores.push(n)});
+  ['nombre','edad','perfil','nivel'].forEach(f=>{if(!S[f]&&inc[f])S[f]=inc[f]});
+  return res;
+}
+function readFile(f){return new Promise((ok,ko)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=()=>ko(r.error);r.readAsText(f)})}
+$('#importFile').onchange=async e=>{
+  const files=[...e.target.files];if(!files.length)return;const st=$('#expStatus');const lines=[];
+  for(const f of files){
+    try{
+      const j=JSON.parse(await readFile(f));const inc=j&&j.app==='bitacora-sensorial'?j.datos:j;
+      if(!inc||!Array.isArray(inc.entries))throw new Error('formato');
+      const otro=inc.nombre&&S.nombre&&norm(inc.nombre)!==norm(S.nombre);
+      const r=mergeState(inc);
+      const det=Object.entries(r.porQuien).map(([q,n])=>`${q}: ${n}`).join(', ');
+      lines.push(`${f.name}: ${r.nuevos?`${r.nuevos} registros nuevos (${det})`:'sin registros nuevos'}${r.quitados?`; ${r.quitados===1?'se quitó 1 registro':'se quitaron '+r.quitados+' registros'} que alguien borró`:''}${r.omitidos?`; ${r.omitidos===1?'1 registro borrado no se volvió':r.omitidos+' registros borrados no se volvieron'} a agregar`:''}${otro?`. Atención: la copia es de «${inc.nombre}»`:''}.`);
+    }catch(err){lines.push(`${f.name}: no es una copia de seguridad de la Bitácora.`)}
+  }
+  save();fillObjSelect();fillCuidadores();
+  $('#kidName').value=S.nombre||'';$('#kidEdad').value=S.edad||'';$('#kidPerfil').value=S.perfil||'tea1';$('#kidNivel').value=S.nivel;applyNivel();
+  render();st.textContent=lines.join(' ');e.target.value='';
+};
+
+/* v3.3: avisos de almacenamiento y de copia de seguridad */
+let persistState='desconocido';
+function realCount(){return ['entries','conductas','logros'].reduce((n,k)=>n+S[k].filter(x=>!x.ejemplo).length,0)}
+function updateBanners(){
+  const b=$('#storageBanner');if(!b)return;
+  if(!storageOk){b.className='banner alertbar';b.innerHTML='<span><b>Este navegador no está guardando los registros.</b> Si cierras la app se perderán. Abre la Bitácora instalada en el celular o en Chrome, y mientras tanto descarga una copia en Patrones.</span>';b.hidden=false;return}
+  const n=realCount();const last=S.ultimaCopia?new Date(S.ultimaCopia):null;const dias=last?Math.floor((Date.now()-last)/864e5):null;
+  if(n>=5&&(dias===null||dias>=7)){b.className='banner alertbar soft';b.innerHTML=`<span>${dias===null?'Todavía no has guardado una copia de seguridad.':`Tu última copia de seguridad fue hace ${dias} días.`} Descárgala o envíala al celular principal desde Patrones.</span><button class="btn small" id="goBackup">Ir a la copia</button>`;b.hidden=false;const g=$('#goBackup');if(g)g.onclick=()=>{show('patrones');setTimeout(()=>$('#exportPanel').scrollIntoView({behavior:'smooth'}),50)};return}
+  b.hidden=true;
+}
+(async()=>{try{if(navigator.storage&&navigator.storage.persist){persistState=(await navigator.storage.persisted())||(await navigator.storage.persist())?'permanente':'puede borrarse si el teléfono se queda sin espacio'}}catch(e){}
+  const el=$('#persistInfo');if(el)el.textContent=`Almacenamiento: ${storageOk?'funcionando':'NO está guardando'}${persistState!=='desconocido'?' · '+persistState:''}. Registros propios: ${realCount()}. Última copia: ${S.ultimaCopia?new Date(S.ultimaCopia).toLocaleDateString('es-CO'):'nunca'}.`})();
+
+function render(){
+  updateBanners();
+  $('#exampleBanner').hidden=!['entries','conductas','logros','checkins','palabras'].some(k=>S[k].some(e=>e.ejemplo));
+  const t=(tabs.find(b=>b.getAttribute('aria-selected')==='true')||{}).dataset?.tab;
+  if(t==='diario')renderDiary();if(t==='avances')renderAvances();if(t==='patrones')renderPatterns();if(t==='estrategias')renderStrats();if(t==='plan')renderPlan();if(t==='familia')renderFamily();
+}
+save();render();
+})();
+</script>
+
+</body>
+</html>

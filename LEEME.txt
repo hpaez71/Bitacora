@@ -1,0 +1,45 @@
+BITÁCORA SENSORIAL 3.3 · VERSIÓN INSTALABLE PARA CELULAR
+=========================================================
+
+Esta carpeta es la app lista para alojar en una dirección web fija.
+Una vez abierta y "instalada" en el celular, funciona SIN INTERNET y los
+registros quedan guardados en ese celular.
+
+Contenido
+  index.html             la app
+  manifest.webmanifest   nombre e ícono para instalarla
+  sw.js                  permite abrirla sin internet
+  icon-*.png             íconos
+  xlsx.full.min.js       librería para exportar a Excel sin internet (SheetJS, licencia Apache 2.0)
+
+1. ALOJARLA (una sola vez; hace falta HTTPS)
+   Opción A · GitHub Pages (gratis, unos 10 minutos)
+     1) Crear una cuenta en github.com y un repositorio nuevo, por ejemplo "bitacora".
+     2) "Add file" → "Upload files" → arrastrar TODOS los archivos de esta carpeta → "Commit".
+     3) Settings → Pages → Source: "Deploy from a branch" → rama "main", carpeta "/ (root)" → Save.
+     4) En 1 o 2 minutos queda en: https://SU-USUARIO.github.io/bitacora/
+   Opción B · Servidor web de la Universidad: copiar la carpeta tal cual en un sitio con HTTPS.
+   No sirve abrir index.html desde WhatsApp, Drive o la carpeta de descargas del celular.
+
+2. INSTALARLA EN EL CELULAR PRINCIPAL (celular fijo)
+   Android (Chrome): abrir la dirección → botón "Instalar" que aparece arriba,
+                     o menú ⋮ → "Instalar app" / "Agregar a la pantalla principal".
+   iPhone (Safari):  abrir la dirección → botón Compartir → "Agregar a inicio".
+   Desde ahí, abrir SIEMPRE la Bitácora desde su ícono.
+
+3. VARIOS CUIDADORES
+   - Cada cuidador escribe su nombre en "Registra" (arriba). Cada registro queda marcado con ese nombre.
+   - En un mismo celular pueden registrar varias personas: basta cambiar el nombre en "Registra".
+   - Si otro cuidador usa su propio celular: instala la app igual, y cada cierto tiempo va a
+     Patrones → Respaldo y exportación → "Enviar copia" (o "Descargar copia") y la manda
+     por WhatsApp o correo al celular principal.
+   - En el celular principal: Patrones → "Cargar una copia de seguridad" → elegir una o varias copias.
+     Los registros se suman, los repetidos no se duplican y lo que alguien borró no vuelve a aparecer.
+
+4. RESPALDO
+   Los datos viven en el celular. Descargar una copia al menos una vez por semana
+   (la app lo recuerda). Si el celular se pierde o se borra el navegador, la copia permite recuperarlos.
+
+5. ACTUALIZAR LA APP
+   Reemplazar los archivos en el mismo sitio. Los celulares reciben la versión nueva la próxima
+   vez que abran la app con internet; los registros no se pierden.
